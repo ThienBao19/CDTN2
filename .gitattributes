@@ -1,0 +1,5 @@
+# File chạy trong container Linux phải giữ xuống dòng LF (kể cả khi clone trên Windows)
+*.sh text eol=lf
+Dockerfile text eol=lf
+deploy/nginx.conf text eol=lf
+deploy/docker-compose.yml text eol=lf
