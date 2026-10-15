@@ -19,6 +19,20 @@
 | FR-13 | Hủy liên kết | Trung bình | `links` | Cài đặt | 2 | TC-08 |
 | FR-14 | Thông báo SMS | Thấp | — | — | Mở rộng | — |
 
+## Sprint 1 — đã xong (15/10/2026)
+
+- [x] FR-01 Đăng ký/đăng nhập/đăng xuất/đổi mật khẩu (JWT trong cookie httpOnly, argon2, giới hạn 10 lần đăng nhập/phút)
+- [x] FR-02 Phân quyền: guard toàn cục, `@Roles`, kiểm tra lại tài khoản từ CSDL mỗi request
+- [x] FR-03, FR-04 Bệnh nhân, ca phẫu thuật (lọc ngày/phòng/trạng thái, hủy ca có lý do)
+- [x] FR-05, FR-10 Đổi trạng thái đúng thứ tự, điều chỉnh có lý do, chống cập nhật trùng, lịch sử chỉ thêm mới
+- [x] FR-06 Mã theo dõi 8 ký tự (chỉ lưu HMAC), QR chứa link `/lien-ket?code=`, thu hồi, hết hạn 24h
+- [x] FR-07 Liên kết người nhà, khóa 15 phút sau 5 lần sai
+- [x] FR-08 (phần polling 10s) màn hình người nhà; FR-13 hủy liên kết; nhật ký truy cập cho các thao tác chính
+- [x] Web: đăng nhập/đăng ký, người nhà (danh sách, liên kết, chi tiết), nhân viên (danh sách, tạo ca, chi tiết + QR)
+- [x] Kiểm thử: 25 unit + 30 e2e test; [Kết quả kiểm thử](kiem-thu/Ket-qua-kiem-thu.xlsx)
+
+**Còn lại cho Sprint 2:** FR-09 push FCM, WebSocket, FR-11 màn hình nhật ký, FR-12 trang quản trị, TC-09, TC-10.
+
 ## Đã có trong khung dự án
 
 - [x] Monorepo pnpm + Turborepo, Docker Compose PostgreSQL

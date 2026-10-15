@@ -18,6 +18,7 @@ packages/
 docs/       nhật ký thực hiện, backlog
 ```
 
+Web gọi API qua proxy `/api` của Next.js nên cookie đăng nhập (httpOnly) dùng chung origin.
 Monorepo dùng pnpm workspaces + Turborepo. Thông báo đẩy dùng Firebase Cloud Messaging (sẽ tích hợp ở Sprint 2).
 
 ## Chạy local
@@ -26,7 +27,7 @@ Yêu cầu: Node ≥ 20, pnpm 9, Docker Desktop.
 
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env        # điền SEED_PASSWORD
+cp apps/api/.env.example apps/api/.env        # điền SEED_PASSWORD, JWT_SECRET, TRACKING_CODE_SECRET
 cp apps/web/.env.example apps/web/.env.local
 pnpm db:up                                     # PostgreSQL ở cổng 5440
 pnpm --filter @pt/shared build
@@ -44,7 +45,7 @@ Cả ba dùng mật khẩu `SEED_PASSWORD` trong `apps/api/.env`.
 |------|-------|
 | `pnpm build` | Build toàn bộ |
 | `pnpm test` | Unit test (Jest) |
-| `pnpm --filter @pt/api test:e2e` | Test API với CSDL thật |
+| `pnpm --filter @pt/api test:e2e` | Test API với CSDL test riêng (`DATABASE_URL_TEST`, tự migrate + seed) |
 | `pnpm lint` | ESLint |
 | `pnpm db:studio` | Mở Prisma Studio xem dữ liệu |
 
@@ -52,4 +53,5 @@ Cả ba dùng mật khẩu `SEED_PASSWORD` trong `apps/api/.env`.
 
 - [Backlog và truy vết yêu cầu](docs/backlog.md)
 - [Nhật ký thực hiện đề tài](docs/nhat-ky-thuc-hien.md)
+- [Kết quả kiểm thử (Excel)](docs/kiem-thu/Ket-qua-kiem-thu.xlsx): test case, bug log, tổng hợp; ảnh minh chứng để trong `docs/kiem-thu/anh/`
 - Tài liệu dự án gốc và 10 bài giảng nằm ở thư mục gốc. Các file này chỉ để local và không đưa lên git.

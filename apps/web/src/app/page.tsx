@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { StatusSteps } from "@/components/status-steps";
-import { fetchHealth } from "@/lib/api";
+import { fetchHealth } from "@/lib/server-health";
 
 export const dynamic = "force-dynamic";
 
 const ENTRIES = [
   {
-    href: "/lien-ket",
+    href: "/theo-doi",
     title: "Tôi là người nhà",
     desc: "Nhập mã hoặc quét QR để theo dõi ca phẫu thuật",
   },
