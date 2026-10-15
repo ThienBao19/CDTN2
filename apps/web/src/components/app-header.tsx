@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
+import { useIdleLogout } from "@/lib/use-idle-logout";
+
+const STAFF_IDLE_MS = 30 * 60 * 1000;
 
 type Props = { title: string; user: User | null; backHref?: string };
 
 export function AppHeader({ title, user, backHref }: Props) {
   const router = useRouter();
+  useIdleLogout(user !== null && user.role !== "FAMILY", STAFF_IDLE_MS);
 
   async function handleLogout() {
     await api.post("/auth/logout").catch(() => undefined);

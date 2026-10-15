@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AccessModule } from './access/access.module';
 import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 import { validateEnv } from './config/env.validation';
 import { DevicesModule } from './devices/devices.module';
 import { EventsModule } from './events/events.module';
@@ -51,6 +52,6 @@ const RATE_WINDOW_MS = 60_000;
     DevicesModule,
     AdminModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useClass: AppThrottlerGuard }],
 })
 export class AppModule {}

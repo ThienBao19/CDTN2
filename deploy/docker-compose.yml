@@ -1,0 +1,95 @@
+# Triển khai toàn bộ hệ thống: docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+name: patient-tracker
+
+x-db-env: &db-env
+  POSTGRES_USER: ${POSTGRES_USER:-pt}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Thiếu POSTGRES_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB:-patient_tracker}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment: *db-env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pt}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-patient_tracker}?schema=public
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:?Thiếu JWT_SECRET}
+      TRACKING_CODE_SECRET: ${TRACKING_CODE_SECRET:?Thiếu TRACKING_CODE_SECRET}
+      SEED_PASSWORD: ${SEED_PASSWORD:-}
+      SESSION_HOURS: ${SESSION_HOURS:-8}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: 1
+      # Giới hạn đăng nhập/đăng ký mỗi phút; chỉ nới khi chạy thử tải
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-10}
+      # Giới hạn chung mỗi người dùng mỗi phút
+      RATE_LIMIT: ${RATE_LIMIT:-300}
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${FIREBASE_SERVICE_ACCOUNT_BASE64:-}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        API_ORIGIN: http://api:4000
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY:-}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:-}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID:-}
+        NEXT_PUBLIC_FIREBASE_VAPID_KEY: ${NEXT_PUBLIC_FIREBASE_VAPID_KEY:-}
+    restart: unless-stopped
+    environment:
+      API_ORIGIN: http://api:4000
+    depends_on:
+      api:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - api
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      <<: *db-env
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: ["sh", "/backup.sh"]
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - ../backups:/backups
+    # Chờ API healthy (đã chạy migration) để bản sao lưu đầu tiên không bị rỗng
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:

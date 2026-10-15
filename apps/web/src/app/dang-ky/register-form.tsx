@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, ErrorText, Field } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
+import { safeNextPath } from "@/lib/format";
 
 // Đăng ký tài khoản người nhà bằng email hoặc số điện thoại (FR-01)
 export function RegisterForm() {
@@ -31,7 +32,7 @@ export function RegisterForm() {
         password,
       });
       await api.post("/auth/login", { identifier: contact, password });
-      router.replace(next?.startsWith("/") && !next.startsWith("//") ? next : "/theo-doi");
+      router.replace(safeNextPath(next, "FAMILY"));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Đăng ký thất bại");
       setIsLoading(false);

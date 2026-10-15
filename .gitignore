@@ -16,3 +16,6 @@ Thumbs.db
 
 # Firebase service account
 firebase-service-account*.json
+
+# Bản sao lưu CSDL
+/backups/

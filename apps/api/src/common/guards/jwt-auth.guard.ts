@@ -12,12 +12,12 @@ import { AuthRequest, JwtPayload } from '../types/auth-user';
 
 export const AUTH_COOKIE = 'pt_token';
 
+// Header Authorization (client chủ động gửi) được ưu tiên hơn cookie do trình duyệt tự đính kèm
 export function extractToken(req: AuthRequest): string | undefined {
-  const cookies = req.cookies as Record<string, string> | undefined;
-  const fromCookie = cookies?.[AUTH_COOKIE];
-  if (fromCookie) return fromCookie;
   const [type, value] = req.headers.authorization?.split(' ') ?? [];
-  return type === 'Bearer' ? value : undefined;
+  if (type === 'Bearer' && value) return value;
+  const cookies = req.cookies as Record<string, string> | undefined;
+  return cookies?.[AUTH_COOKIE];
 }
 
 // Guard toàn cục: mọi API đều cần đăng nhập trừ khi gắn @Public().
@@ -50,10 +50,21 @@ export class JwtAuthGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, role: true, fullName: true, status: true },
+      select: {
+        id: true,
+        role: true,
+        fullName: true,
+        status: true,
+        tokenVersion: true,
+      },
     });
     if (!user || user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Tài khoản không còn hiệu lực');
+    }
+    if (user.tokenVersion !== payload.ver) {
+      throw new UnauthorizedException(
+        'Phiên đăng nhập đã bị thu hồi, vui lòng đăng nhập lại',
+      );
     }
     req.user = { id: user.id, role: user.role, fullName: user.fullName };
     return true;

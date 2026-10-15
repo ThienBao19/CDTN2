@@ -31,8 +31,17 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
   if (res.status === 204) return undefined as T;
   const body = (await res.json().catch(() => null)) as unknown;
+  if (res.status === 401 && !path.startsWith("/auth/")) redirectToLogin();
   if (!res.ok) throw new ApiError(errorMessage(body as ErrorBody, res.status), res.status);
   return body as T;
+}
+
+// Phiên hết hạn/bị thu hồi: về trang đăng nhập, giữ nguyên đường dẫn và query
+// (vd /lien-ket?code=... từ mã QR) để quay lại đúng chỗ sau khi đăng nhập
+function redirectToLogin(): void {
+  if (typeof window === "undefined" || window.location.pathname === "/dang-nhap") return;
+  const here = window.location.pathname + window.location.search;
+  window.location.assign(`/dang-nhap?next=${encodeURIComponent(here)}`);
 }
 
 export const api = {

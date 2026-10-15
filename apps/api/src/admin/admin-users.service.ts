@@ -90,6 +90,11 @@ export class AdminUsersService {
         fullName: dto.fullName?.trim(),
         role: dto.role,
         status: dto.status,
+        // Khóa hoặc đổi vai trò thì thu hồi các phiên đang mở
+        ...(dto.status === UserStatus.LOCKED ||
+        (dto.role !== undefined && dto.role !== user.role)
+          ? { tokenVersion: { increment: 1 } }
+          : {}),
       },
     });
     const action = dto.status === UserStatus.LOCKED ? 'LOCK' : 'UPDATE';

@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Ip,
   Post,
   Put,
   Res,
@@ -15,13 +16,13 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import { AUTH_COOKIE } from '../common/guards/jwt-auth.guard';
 import type { AuthUser } from '../common/types/auth-user';
+import { isCookieSecure, sessionMaxAgeMs } from '../config/auth-config';
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
-const COOKIE_MAX_AGE_MS = 8 * 60 * 60 * 1000;
-// Chống dò mật khẩu: mặc định 10 lần/phút mỗi IP (test có thể nới qua env)
+// Chống dò mật khẩu: mặc định 10 lần/phút cho mỗi tài khoản (test có thể nới qua env)
 const LOGIN_LIMIT = {
   default: { limit: Number(process.env.LOGIN_RATE_LIMIT ?? 10), ttl: 60_000 },
 };
@@ -32,6 +33,19 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly config: ConfigService,
   ) {}
+
+  private setSessionCookie(res: Response, token: string): void {
+    res.cookie(AUTH_COOKIE, token, {
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: isCookieSecure(
+        this.config.get<string>('COOKIE_SECURE'),
+        this.config.get<string>('NODE_ENV'),
+      ),
+      maxAge: sessionMaxAgeMs(this.config.get<string>('SESSION_HOURS')),
+      path: '/',
+    });
+  }
 
   @Public()
   @Throttle(LOGIN_LIMIT)
@@ -47,16 +61,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: LoginDto,
+    @Ip() ip: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { user, token } = await this.auth.login(dto);
-    res.cookie(AUTH_COOKIE, token, {
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: this.config.get('NODE_ENV') === 'production',
-      maxAge: COOKIE_MAX_AGE_MS,
-      path: '/',
-    });
+    const { user, token } = await this.auth.login(dto, ip);
+    this.setSessionCookie(res, token);
     return { user, accessToken: token };
   }
 
@@ -73,11 +82,13 @@ export class AuthController {
   }
 
   @Put('password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  changePassword(
+  async changePassword(
     @CurrentUser() user: AuthUser,
     @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.auth.changePassword(user.id, dto);
+    const token = await this.auth.changePassword(user.id, dto);
+    this.setSessionCookie(res, token);
+    return { accessToken: token };
   }
 }

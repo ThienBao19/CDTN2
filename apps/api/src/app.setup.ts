@@ -2,12 +2,13 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { parseTrustProxy } from './config/trust-proxy';
 
 // Cấu hình dùng chung cho main.ts và e2e test
 export function configureApp(app: INestApplication): void {
   const expressApp = app as NestExpressApplication;
-  // Web gọi API qua proxy của Next.js trên cùng máy
-  expressApp.set('trust proxy', 'loopback');
+  // Web gọi API qua proxy /api của Next.js; IP thật dùng cho rate limit và nhật ký
+  expressApp.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
   app.use(helmet());
   app.use(cookieParser());
   app.setGlobalPrefix('api');

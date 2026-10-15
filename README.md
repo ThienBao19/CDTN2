@@ -48,6 +48,38 @@ Không bắt buộc khi phát triển. Nếu chưa cấu hình, thông báo vẫ
 3. **Project settings › General** (config ứng dụng Web) và **Cloud Messaging › Web Push certificates** (VAPID key): điền các biến `NEXT_PUBLIC_FIREBASE_*` trong `apps/web/.env.local`, rồi build lại web.
 4. Người nhà vào **Cài đặt › Bật thông báo đẩy**. Trình duyệt chỉ cho đăng ký push trên `localhost` hoặc HTTPS.
 
+## Triển khai bằng Docker
+
+Toàn bộ hệ thống (PostgreSQL, API, web, nginx, sao lưu tự động) chạy bằng một lệnh. nginx là cổng vào duy nhất:
+`/api` đi thẳng vào API (SSE không bị đệm, ghi IP thật), còn lại vào web.
+
+```bash
+cp deploy/.env.example deploy/.env
+```
+
+Điền mật khẩu CSDL, `JWT_SECRET`, `TRACKING_CODE_SECRET` (mỗi khóa ≥ 32 ký tự), `SEED_PASSWORD` trong `deploy/.env`, rồi:
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+```
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api npx prisma db seed
+```
+
+Mở `http://localhost:8080`. Migration tự chạy mỗi khi API khởi động (`prisma migrate deploy`, không xoá dữ liệu).
+Demo trên điện thoại cùng mạng LAN: mở `http://<IP máy>:8080` với `COOKIE_SECURE=false`
+(thông báo đẩy trên trình duyệt chỉ hoạt động với `localhost` hoặc HTTPS).
+
+**Sao lưu (NFR-11):** container `backup` chạy `pg_dump` mỗi ngày vào thư mục `backups/`, giữ 7 ngày. Khôi phục:
+
+```bash
+gunzip -c backups/<tên file>.sql.gz | docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec -T postgres psql -U pt patient_tracker
+```
+
+**Thử tải:** xem [loadtest/README.md](loadtest/README.md). Với 500 người nhà cùng theo dõi một ca: không request nào lỗi,
+thông báo tới người nhà p95 1,04 s.
+
 ## Lệnh hữu ích
 
 | Lệnh | Mô tả |
@@ -55,6 +87,7 @@ Không bắt buộc khi phát triển. Nếu chưa cấu hình, thông báo vẫ
 | `pnpm build` | Build toàn bộ |
 | `pnpm test` | Unit test (Jest) |
 | `pnpm --filter @pt/api test:e2e` | Test API với CSDL test riêng (`DATABASE_URL_TEST`, tự migrate + seed) |
+| `pnpm --filter @pt/api test:cov:all` | Coverage gộp unit + e2e (báo cáo HTML ở `apps/api/coverage`) |
 | `pnpm lint` | ESLint |
 | `pnpm db:studio` | Mở Prisma Studio xem dữ liệu |
 

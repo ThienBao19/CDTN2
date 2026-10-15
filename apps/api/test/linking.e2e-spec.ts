@@ -1,3 +1,4 @@
+import { LinkExpiryService } from '../src/links/link-expiry.service';
 import { PrismaService } from '../src/prisma/prisma.service';
 import {
   api,
@@ -191,5 +192,53 @@ describe('Mã theo dõi & liên kết người nhà (e2e) — FR-06, FR-07, FR-0
       where: { action: 'VIEW', entityId: surgeryId },
     });
     expect(views).toBe(1);
+  });
+
+  const completeSurgery = async (surgeryId: string) => {
+    for (const statusCode of [
+      'PREPARING',
+      'IN_SURGERY',
+      'RECOVERING',
+      'COMPLETED',
+    ]) {
+      await api(app, staff)
+        .post('/surgeries/' + surgeryId + '/status')
+        .send({ statusCode })
+        .expect(201);
+    }
+  };
+
+  it('BUG-02: rejects linking with a pending code after the surgery has finished', async () => {
+    const surgeryId = await createSurgery(app, staff);
+    const { code } = await issueCode(app, staff, surgeryId);
+    await completeSurgery(surgeryId);
+    const res = await api(app, await registerFamily(app))
+      .post('/links')
+      .send({ code })
+      .expect(400);
+    expect((res.body as { message: string }).message).toMatch(/đã kết thúc/);
+  });
+
+  it('BUG-03: expires links 24 hours after the surgery finishes', async () => {
+    const prisma = app.get(PrismaService);
+    const expiry = app.get(LinkExpiryService);
+    const surgeryId = await createSurgery(app, staff);
+    const { code } = await issueCode(app, staff, surgeryId);
+    const family = await registerFamily(app);
+    await api(app, family).post('/links').send({ code }).expect(201);
+    await completeSurgery(surgeryId);
+
+    await expiry.expireFinishedLinks(new Date());
+    await api(app, family)
+      .get('/my/surgeries/' + surgeryId)
+      .expect(200);
+
+    const dayAndAHourLater = new Date(Date.now() + 25 * 60 * 60 * 1000);
+    await expiry.expireFinishedLinks(dayAndAHourLater);
+    await api(app, family)
+      .get('/my/surgeries/' + surgeryId)
+      .expect(404);
+    const link = await prisma.familyLink.findFirst({ where: { surgeryId } });
+    expect(link?.status).toBe('REVOKED');
   });
 });

@@ -24,8 +24,23 @@ export function todayVN(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(new Date());
 }
 
+const ROLE_AREAS: Record<string, string[]> = {
+  FAMILY: ["/theo-doi", "/lien-ket", "/thong-bao", "/cai-dat"],
+  STAFF: ["/staff"],
+  ADMIN: ["/admin", "/staff"],
+};
+
 export function homeForRole(role: string): string {
   if (role === "FAMILY") return "/theo-doi";
   if (role === "ADMIN") return "/admin";
   return "/staff";
+}
+
+// Chỉ quay lại đường dẫn nội bộ thuộc khu vực của vai trò (tránh open redirect và trang 403)
+export function safeNextPath(next: string | null, role: string): string {
+  const isInternal = next !== null && next.startsWith("/") && !next.startsWith("//");
+  const areas = ROLE_AREAS[role] ?? [];
+  const isAllowed =
+    isInternal && areas.some((a) => next === a || next.startsWith(a + "/") || next.startsWith(a + "?"));
+  return isAllowed ? next : homeForRole(role);
 }

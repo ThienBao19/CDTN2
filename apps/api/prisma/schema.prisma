@@ -72,6 +72,8 @@ model User {
   passwordHash String     @map("password_hash")
   role         Role       @default(FAMILY)
   status       UserStatus @default(ACTIVE)
+  // Tăng khi đổi mật khẩu/khóa để vô hiệu mọi phiên đăng nhập cũ
+  tokenVersion Int        @default(0) @map("token_version")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 

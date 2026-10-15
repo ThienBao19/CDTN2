@@ -16,7 +16,9 @@ export function useMe(): User | null {
       .then(setUser)
       .catch((err: unknown) => {
         if (err instanceof ApiError && err.status === 401) {
-          router.replace(`/dang-nhap?next=${encodeURIComponent(window.location.pathname)}`);
+          // Giữ cả query (vd ?code= của QR) để quay lại đúng chỗ sau khi đăng nhập
+          const here = window.location.pathname + window.location.search;
+          router.replace(`/dang-nhap?next=${encodeURIComponent(here)}`);
         }
       });
   }, [router]);

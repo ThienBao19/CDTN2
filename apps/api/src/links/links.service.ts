@@ -10,6 +10,7 @@ import { LinkStatus, Role, TrackingCodeStatus } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { AuthUser } from '../common/types/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
+import { StatusesService } from '../statuses/statuses.service';
 import { normalizeCode } from '../tracking-codes/tracking-code.util';
 import { TrackingCodesService } from '../tracking-codes/tracking-codes.service';
 import { AttemptLimiter } from './attempt-limiter';
@@ -29,6 +30,7 @@ export class LinksService {
     private readonly codes: TrackingCodesService,
     private readonly audit: AuditService,
     private readonly limiter: AttemptLimiter,
+    private readonly statuses: StatusesService,
   ) {}
 
   private fail(userId: string, message: string): never {
@@ -54,7 +56,7 @@ export class LinksService {
     if (!code) this.fail(user.id, 'Mã theo dõi không đúng');
     const found = await this.prisma.trackingCode.findUnique({
       where: { codeHash: this.codes.hash(code) },
-      include: { surgery: true },
+      include: { surgery: { include: { currentStatus: true } } },
     });
     if (!found) this.fail(user.id, 'Mã theo dõi không đúng');
     if (
@@ -65,6 +67,12 @@ export class LinksService {
     }
     if (found.expiresAt <= new Date()) {
       this.fail(user.id, 'Mã theo dõi đã hết hạn');
+    }
+    // Mục 7: liên kết hết hiệu lực khi ca kết thúc, nên không cho liên kết mới
+    if (await this.statuses.isFinal(found.surgery.currentStatus)) {
+      throw new BadRequestException(
+        'Ca phẫu thuật đã kết thúc, không thể theo dõi thêm',
+      );
     }
 
     const existing = await this.prisma.familyLink.findUnique({

@@ -158,4 +158,48 @@ describe('Quản trị (e2e) — FR-11, FR-12', () => {
     expect(body.items.every((i) => i.action === 'STATUS_CHANGE')).toBe(true);
     expect(body.total).toBeGreaterThanOrEqual(body.items.length);
   });
+
+  it('updates a room, deactivates it and returns 404 for unknown ids', async () => {
+    const created = await api(app, admin)
+      .post('/admin/rooms')
+      .send({ name: 'Phòng tạm ' + Date.now(), type: 'WAITING' })
+      .expect(201);
+    const id = (created.body as { id: string }).id;
+    const updated = await api(app, admin)
+      .put('/admin/rooms/' + id)
+      .send({ isActive: false, location: 'Tầng 1' })
+      .expect(200);
+    expect(updated.body).toMatchObject({ isActive: false, location: 'Tầng 1' });
+    const active = await api(app, staff).get('/rooms').expect(200);
+    expect(
+      (active.body as Array<{ id: string }>).map((r) => r.id),
+    ).not.toContain(id);
+    await api(app, admin)
+      .put('/admin/rooms/00000000-0000-4000-8000-000000000000')
+      .send({ isActive: true })
+      .expect(404);
+    await api(app, admin)
+      .put('/admin/statuses/999999')
+      .send({ label: 'X' })
+      .expect(404);
+  });
+
+  it('BUG-04: changing a user role revokes their open sessions', async () => {
+    const email = 'vaitro' + Date.now() + '@example.com';
+    const created = await api(app, admin)
+      .post('/admin/users')
+      .send({
+        fullName: 'Đổi vai trò',
+        email,
+        password: 'NhanVien@123',
+        role: 'STAFF',
+      })
+      .expect(201);
+    const token = await login(app, email, 'NhanVien@123');
+    await api(app, admin)
+      .patch('/admin/users/' + (created.body as User).id)
+      .send({ role: 'ADMIN' })
+      .expect(200);
+    await api(app, token).get('/auth/me').expect(401);
+  });
 });

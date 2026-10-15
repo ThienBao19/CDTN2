@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { PrismaService } from '../src/prisma/prisma.service';
 import {
   api,
   createTestApp,
@@ -82,7 +83,7 @@ describe('Auth & phân quyền (e2e) — FR-01, FR-02', () => {
     await api(app, token)
       .put('/auth/password')
       .send({ currentPassword: 'MatKhau@123', newPassword: 'MatKhauMoi@456' })
-      .expect(204);
+      .expect(200);
     await api(app)
       .post('/auth/login')
       .send({ identifier: email, password: 'MatKhau@123' })
@@ -101,5 +102,35 @@ describe('Auth & phân quyền (e2e) — FR-01, FR-02', () => {
         gender: 'MALE',
       })
       .expect(403);
+  });
+
+  it('BUG-04: changing the password revokes other sessions but keeps the current one', async () => {
+    const otherSession = await registerFamily(app);
+    const me = await api(app, otherSession).get('/auth/me').expect(200);
+    const email = (me.body as { email: string }).email;
+    const current = await login(app, email, 'MatKhau@123');
+    const res = await api(app, current)
+      .put('/auth/password')
+      .send({ currentPassword: 'MatKhau@123', newPassword: 'MatKhauMoi@456' })
+      .expect(200);
+    await api(app, otherSession).get('/auth/me').expect(401);
+    await api(app, current).get('/auth/me').expect(401);
+    const fresh = (res.body as { accessToken: string }).accessToken;
+    await api(app, fresh).get('/auth/me').expect(200);
+  });
+
+  it('BUG-08: records successful and failed logins in the audit log', async () => {
+    const prisma = app.get(PrismaService);
+    const before = await prisma.auditLog.count({
+      where: { action: 'LOGIN_FAILED' },
+    });
+    await api(app)
+      .post('/auth/login')
+      .send({ identifier: SEED_USERS.admin, password: 'sai-mat-khau' })
+      .expect(401);
+    const after = await prisma.auditLog.count({
+      where: { action: 'LOGIN_FAILED' },
+    });
+    expect(after).toBe(before + 1);
   });
 });
