@@ -16,6 +16,9 @@ const FAMILY_SURGERY_SELECT = {
   currentStatus: { select: { code: true, label: true, sortOrder: true } },
 } satisfies Prisma.SurgerySelect;
 
+// Màn hình tự làm mới liên tục: chỉ ghi một lần xem trong mỗi khoảng này
+const VIEW_LOG_WINDOW_MS = 5 * 60 * 1000;
+
 type FamilySurgery = Prisma.SurgeryGetPayload<{
   select: typeof FAMILY_SURGERY_SELECT;
 }>;
@@ -67,13 +70,27 @@ export class MyService {
         status: { select: { code: true, label: true } },
       },
     });
+    await this.logView(user.id, surgeryId, ipAddress);
+    return { ...toFamilyView(link.id, link.surgery), history };
+  }
+
+  private async logView(userId: string, surgeryId: string, ipAddress?: string) {
+    const recent = await this.prisma.auditLog.findFirst({
+      where: {
+        userId,
+        action: 'VIEW',
+        entityId: surgeryId,
+        createdAt: { gte: new Date(Date.now() - VIEW_LOG_WINDOW_MS) },
+      },
+      select: { id: true },
+    });
+    if (recent) return;
     await this.audit.log({
-      userId: user.id,
+      userId,
       action: 'VIEW',
       entityType: 'surgery',
       entityId: surgeryId,
       ipAddress,
     });
-    return { ...toFamilyView(link.id, link.surgery), history };
   }
 }

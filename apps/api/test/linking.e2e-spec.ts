@@ -176,4 +176,20 @@ describe('Mã theo dõi & liên kết người nhà (e2e) — FR-06, FR-07, FR-0
       .send({})
       .expect(409);
   });
+
+  it('FR-11: logs a family view once even when the screen refreshes repeatedly', async () => {
+    const surgeryId = await createSurgery(app, staff);
+    const { code } = await issueCode(app, staff, surgeryId);
+    const family = await registerFamily(app);
+    await api(app, family).post('/links').send({ code }).expect(201);
+    for (let i = 0; i < 3; i += 1) {
+      await api(app, family)
+        .get('/my/surgeries/' + surgeryId)
+        .expect(200);
+    }
+    const views = await app.get(PrismaService).auditLog.count({
+      where: { action: 'VIEW', entityId: surgeryId },
+    });
+    expect(views).toBe(1);
+  });
 });

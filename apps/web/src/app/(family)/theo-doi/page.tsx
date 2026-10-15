@@ -2,21 +2,28 @@
 
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
+import { FamilyNav } from "@/components/family-nav";
 import { ErrorText } from "@/components/ui";
 import { formatTime } from "@/lib/format";
 import type { FamilySurgery } from "@/lib/types";
+import { useEvents } from "@/lib/use-events";
 import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
 
-const REFRESH_MS = 10_000;
+// Realtime qua SSE; polling chỉ là dự phòng khi mất kết nối
+const REFRESH_MS = 30_000;
 
 export default function FollowListPage() {
   const user = useMe();
-  const { data: items, error } = usePolling<FamilySurgery[]>("/my/surgeries", REFRESH_MS);
+  const { data: items, error, reload } = usePolling<FamilySurgery[]>("/my/surgeries", REFRESH_MS);
+  useEvents((e) => {
+    if (e.type === "surgery.updated") void reload();
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <AppHeader title="Bệnh nhân đang theo dõi" user={user} />
+      <FamilyNav />
       <ErrorText>{error}</ErrorText>
       {items?.length === 0 && (
         <p className="text-muted">

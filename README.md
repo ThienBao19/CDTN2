@@ -15,11 +15,11 @@ apps/
             └─ /admin      trang quản trị
 packages/
   shared/   hằng số dùng chung (vai trò, 5 trạng thái ca)
-docs/       nhật ký thực hiện, backlog
+docs/       quan-ly/ (backlog, nhật ký), kiem-thu/ (test case, ảnh)
 ```
 
 Web gọi API qua proxy `/api` của Next.js nên cookie đăng nhập (httpOnly) dùng chung origin.
-Monorepo dùng pnpm workspaces + Turborepo. Thông báo đẩy dùng Firebase Cloud Messaging (sẽ tích hợp ở Sprint 2).
+Monorepo dùng pnpm workspaces + Turborepo. Thông báo đẩy dùng Firebase Cloud Messaging; màn hình đang mở nhận cập nhật realtime qua Server-Sent Events (`/api/events`).
 
 ## Chạy local
 
@@ -39,6 +39,15 @@ pnpm dev                                       # chạy API + web
 Tài khoản demo sau khi seed: `admin@example.com`, `staff@example.com`, `family@example.com`.
 Cả ba dùng mật khẩu `SEED_PASSWORD` trong `apps/api/.env`.
 
+## Thông báo đẩy (Firebase Cloud Messaging)
+
+Không bắt buộc khi phát triển. Nếu chưa cấu hình, thông báo vẫn được lưu và hiện ngay trong ứng dụng qua SSE, trạng thái gửi push ghi là `SKIPPED`.
+
+1. Tạo dự án ở Firebase Console, thêm ứng dụng Web.
+2. **Project settings › Service accounts › Generate new private key**: mã hoá file JSON sang base64 rồi điền vào `FIREBASE_SERVICE_ACCOUNT_BASE64` trong `apps/api/.env`.
+3. **Project settings › General** (config ứng dụng Web) và **Cloud Messaging › Web Push certificates** (VAPID key): điền các biến `NEXT_PUBLIC_FIREBASE_*` trong `apps/web/.env.local`, rồi build lại web.
+4. Người nhà vào **Cài đặt › Bật thông báo đẩy**. Trình duyệt chỉ cho đăng ký push trên `localhost` hoặc HTTPS.
+
 ## Lệnh hữu ích
 
 | Lệnh | Mô tả |
@@ -51,7 +60,6 @@ Cả ba dùng mật khẩu `SEED_PASSWORD` trong `apps/api/.env`.
 
 ## Tài liệu
 
-- [Backlog và truy vết yêu cầu](docs/backlog.md)
-- [Nhật ký thực hiện đề tài](docs/nhat-ky-thuc-hien.md)
+- [Quản lý dự án (Excel)](docs/quan-ly/Quan-ly-du-an.xlsx): product backlog, kế hoạch sprint, nhật ký buổi học, nhật ký công việc, thành viên
 - [Kết quả kiểm thử (Excel)](docs/kiem-thu/Ket-qua-kiem-thu.xlsx): test case, bug log, tổng hợp; ảnh minh chứng để trong `docs/kiem-thu/anh/`
 - Tài liệu dự án gốc và 10 bài giảng nằm ở thư mục gốc. Các file này chỉ để local và không đưa lên git.

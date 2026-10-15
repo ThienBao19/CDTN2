@@ -7,10 +7,11 @@ import { AppHeader } from "@/components/app-header";
 import { ErrorText } from "@/components/ui";
 import { formatTime, todayVN } from "@/lib/format";
 import type { Room, Surgery } from "@/lib/types";
+import { useEvents } from "@/lib/use-events";
 import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = 30_000;
 const SELECT_CLASS = "min-h-12 rounded-xl border border-border bg-surface px-3";
 
 // Danh sách ca, lọc theo ngày, phòng, trạng thái (mục 12.2)
@@ -26,7 +27,8 @@ export default function StaffSurgeriesPage() {
     ...(roomId ? { roomId } : {}),
     ...(status ? { status } : {}),
   });
-  const { data: surgeries, error } = usePolling<Surgery[]>(`/surgeries?${params}`, REFRESH_MS);
+  const { data: surgeries, error, reload } = usePolling<Surgery[]>(`/surgeries?${params}`, REFRESH_MS);
+  useEvents(() => void reload());
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">

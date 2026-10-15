@@ -62,3 +62,13 @@ export type FamilySurgery = {
   updatedAt: string;
   history?: HistoryEntry[];
 };
+
+export type NotificationItem = {
+  id: string;
+  surgeryId: string;
+  content: string;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export type NotificationList = { items: NotificationItem[]; unreadCount: number };

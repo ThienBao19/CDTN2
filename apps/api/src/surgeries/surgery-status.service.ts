@@ -4,6 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../common/types/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { evaluateTransition } from '../statuses/status-transition';
@@ -25,6 +26,7 @@ export class SurgeryStatusService {
     private readonly surgeries: SurgeriesService,
     private readonly statuses: StatusesService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // UC-03: kiểm tra thứ tự, lưu trạng thái + lịch sử trong một giao dịch
@@ -80,7 +82,11 @@ export class SurgeryStatusService {
       entityType: 'surgery',
       entityId: surgeryId,
     });
-    // Sprint 2: phát sự kiện để gửi push cho người nhà đã liên kết (FR-09)
+    // FR-09: lưu thông báo, đẩy realtime và gửi push cho người nhà đã liên kết
+    await this.notifications.notifySurgery(
+      surgeryId,
+      target.notificationMessage,
+    );
     return updated;
   }
 

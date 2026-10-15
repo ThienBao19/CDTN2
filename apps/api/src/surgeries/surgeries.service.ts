@@ -5,6 +5,11 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
+import {
+  CHANGED_MESSAGE,
+  NotificationsService,
+  SCHEDULE_CHANGED_MESSAGE,
+} from '../notifications/notifications.service';
 import { AuthUser } from '../common/types/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatusesService } from '../statuses/statuses.service';
@@ -23,6 +28,7 @@ export class SurgeriesService {
     private readonly prisma: PrismaService,
     private readonly statuses: StatusesService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // Tạo ca ở trạng thái đầu tiên và ghi bản lịch sử đầu tiên trong cùng giao dịch
@@ -114,6 +120,12 @@ export class SurgeriesService {
       entityType: 'surgery',
       entityId: id,
     });
+    const isScheduleChanged =
+      surgery.scheduledAt.getTime() !== current.scheduledAt.getTime() ||
+      surgery.roomId !== current.roomId;
+    if (isScheduleChanged) {
+      await this.notifications.notifySurgery(id, SCHEDULE_CHANGED_MESSAGE);
+    }
     return surgery;
   }
 
@@ -138,6 +150,7 @@ export class SurgeriesService {
       entityType: 'surgery',
       entityId: id,
     });
+    await this.notifications.notifySurgery(id, CHANGED_MESSAGE);
     return surgery;
   }
 }

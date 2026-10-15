@@ -12,5 +12,12 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/theo-doi/:path*", "/lien-ket", "/staff/:path*", "/admin/:path*"],
+  matcher: [
+    "/theo-doi/:path*",
+    "/thong-bao",
+    "/cai-dat",
+    "/lien-ket",
+    "/staff/:path*",
+    "/admin/:path*",
+  ],
 };

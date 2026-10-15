@@ -8,16 +8,21 @@ import { Button, Card, ErrorText } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatTime } from "@/lib/format";
 import type { FamilySurgery } from "@/lib/types";
+import { useEvents } from "@/lib/use-events";
 import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
 
-const REFRESH_MS = 10_000;
+// Realtime qua SSE; polling chỉ là dự phòng khi mất kết nối
+const REFRESH_MS = 30_000;
 
 export default function FollowDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const user = useMe();
-  const { data, error } = usePolling<FamilySurgery>(`/my/surgeries/${id}`, REFRESH_MS);
+  const { data, error, reload } = usePolling<FamilySurgery>(`/my/surgeries/${id}`, REFRESH_MS);
+  useEvents((e) => {
+    if (e.surgeryId === id) void reload();
+  });
 
   async function handleUnlink() {
     if (!data || !window.confirm("Ngừng theo dõi bệnh nhân này?")) return;

@@ -7,6 +7,7 @@ import { StatusSteps } from "@/components/status-steps";
 import { Card, ErrorText } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import type { HistoryEntry, StatusRef, Surgery } from "@/lib/types";
+import { useEvents } from "@/lib/use-events";
 import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
 import { CancelPanel } from "./cancel-panel";
@@ -30,6 +31,10 @@ export default function StaffSurgeryPage() {
     void surgery.reload();
     void history.reload();
   }
+  // Nhân viên khác cập nhật cùng ca thì màn hình này cũng đổi theo
+  useEvents((e) => {
+    if (e.type === "surgery.updated" && e.surgeryId === id) reloadAll();
+  });
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">

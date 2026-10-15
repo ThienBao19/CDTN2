@@ -3,14 +3,19 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AccessModule } from './access/access.module';
+import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env.validation';
+import { DevicesModule } from './devices/devices.module';
+import { EventsModule } from './events/events.module';
 import { HealthModule } from './health/health.module';
 import { LinksModule } from './links/links.module';
 import { MyModule } from './my/my.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { PatientsModule } from './patients/patients.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { PushModule } from './push/push.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { StatusesModule } from './statuses/statuses.module';
 import { SurgeriesModule } from './surgeries/surgeries.module';
@@ -31,6 +36,9 @@ const RATE_WINDOW_MS = 60_000;
     PrismaModule,
     AuditModule,
     AccessModule,
+    PushModule,
+    EventsModule,
+    NotificationsModule,
     StatusesModule,
     HealthModule,
     AuthModule,
@@ -40,6 +48,8 @@ const RATE_WINDOW_MS = 60_000;
     TrackingCodesModule,
     LinksModule,
     MyModule,
+    DevicesModule,
+    AdminModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

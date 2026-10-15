@@ -63,6 +63,7 @@ export function api(app: TestApp, token?: string) {
     get: (url: string) => withAuth(request(server).get(`/api${url}`)),
     post: (url: string) => withAuth(request(server).post(`/api${url}`)),
     put: (url: string) => withAuth(request(server).put(`/api${url}`)),
+    patch: (url: string) => withAuth(request(server).patch(`/api${url}`)),
     delete: (url: string) => withAuth(request(server).delete(`/api${url}`)),
   };
 }
@@ -103,4 +104,29 @@ export async function issueCode(
     .send({})
     .expect(201);
   return res.body as { id: string; code: string };
+}
+
+// Tạo người nhà mới và liên kết với ca bằng mã do nhân viên cấp
+export async function linkNewFamily(
+  app: TestApp,
+  staffToken: string,
+  surgeryId: string,
+): Promise<string> {
+  const { code } = await issueCode(app, staffToken, surgeryId);
+  const family = await registerFamily(app);
+  await api(app, family).post('/links').send({ code }).expect(201);
+  return family;
+}
+
+// Chờ tới khi điều kiện đúng (dùng cho việc gửi push chạy nền)
+export async function waitFor(
+  check: () => Promise<boolean>,
+  timeoutMs = 5000,
+): Promise<void> {
+  const start = Date.now();
+  while (!(await check())) {
+    if (Date.now() - start > timeoutMs)
+      throw new Error('waitFor: hết thời gian chờ');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
 }
