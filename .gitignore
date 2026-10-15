@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Tài liệu môn học gốc (giữ local, không đưa lên repo)
+/Buoi*_ChuyenDeTotNghiep2.pdf
+/Tài liệu dự án*.docx
+
+# Firebase service account
+firebase-service-account*.json
