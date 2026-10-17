@@ -19,3 +19,11 @@ firebase-service-account*.json
 
 # Bản sao lưu CSDL
 /backups/
+
+# Đầu vào tạm cho ảnh minh chứng kết quả test tự động
+e2e/.evidence-input/
+e2e/test-results/
+e2e/playwright-report/
+
+# File khóa tạm của Word/Excel khi đang mở tài liệu
+~$*

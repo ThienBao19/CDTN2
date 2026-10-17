@@ -14,6 +14,12 @@ const FAMILY_SURGERY_SELECT = {
   patient: { select: { fullName: true } },
   room: { select: { name: true, location: true } },
   currentStatus: { select: { code: true, label: true, sortOrder: true } },
+  // Thời điểm đổi trạng thái gần nhất (mục 12.1), không phải lúc sửa tên/giờ ca
+  history: {
+    orderBy: { changedAt: 'desc' },
+    take: 1,
+    select: { changedAt: true },
+  },
 } satisfies Prisma.SurgerySelect;
 
 // Màn hình tự làm mới liên tục: chỉ ghi một lần xem trong mỗi khoảng này
@@ -34,7 +40,7 @@ function toFamilyView(linkId: string, s: FamilySurgery) {
     scheduledAt: s.scheduledAt,
     isCancelled: s.cancelledAt !== null,
     currentStatus: s.currentStatus,
-    updatedAt: s.updatedAt,
+    updatedAt: s.history[0]?.changedAt ?? s.updatedAt,
   };
 }
 

@@ -12,6 +12,7 @@ import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
 import { CancelPanel } from "./cancel-panel";
 import { CodesPanel } from "./codes-panel";
+import { EditPanel } from "./edit-panel";
 import { StatusPanel } from "./status-panel";
 
 export default function StaffSurgeryPage() {
@@ -62,6 +63,7 @@ export default function StaffSurgeryPage() {
             <h2 className="text-lg font-semibold">Lịch sử trạng thái</h2>
             <HistoryList entries={history.data ?? []} />
           </section>
+          {isActive && <EditPanel surgery={s} onSaved={reloadAll} />}
           {isActive && !isFinal && <CancelPanel surgeryId={s.id} onCancelled={reloadAll} />}
         </>
       )}

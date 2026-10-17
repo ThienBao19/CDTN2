@@ -5,6 +5,7 @@ import {
   createSurgery,
   createTestApp,
   issueCode,
+  linkNewFamily,
   login,
   registerFamily,
   SEED_USERS,
@@ -240,5 +241,29 @@ describe('Mã theo dõi & liên kết người nhà (e2e) — FR-06, FR-07, FR-0
       .expect(404);
     const link = await prisma.familyLink.findFirst({ where: { surgeryId } });
     expect(link?.status).toBe('REVOKED');
+  });
+
+  it('BUG-15: shows the last status change time, not the last edit time', async () => {
+    const surgeryId = await createSurgery(app, staff);
+    const family = await linkNewFamily(app, staff, surgeryId);
+    await api(app, staff)
+      .post('/surgeries/' + surgeryId + '/status')
+      .send({ statusCode: 'PREPARING' })
+      .expect(201);
+    const lastChange = await app.get(PrismaService).statusHistory.findFirst({
+      where: { surgeryId },
+      orderBy: { changedAt: 'desc' },
+    });
+    await new Promise((r) => setTimeout(r, 50));
+    await api(app, staff)
+      .put('/surgeries/' + surgeryId)
+      .send({ title: 'Đổi tên ca' })
+      .expect(200);
+    const res = await api(app, family)
+      .get('/my/surgeries/' + surgeryId)
+      .expect(200);
+    expect((res.body as { updatedAt: string }).updatedAt).toBe(
+      lastChange?.changedAt.toISOString(),
+    );
   });
 });

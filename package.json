@@ -15,7 +15,8 @@
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @pt/api prisma:migrate",
     "db:seed": "pnpm --filter @pt/api prisma:seed",
-    "db:studio": "pnpm --filter @pt/api prisma:studio"
+    "db:studio": "pnpm --filter @pt/api prisma:studio",
+    "test:ui": "pnpm --filter @pt/e2e test:ui"
   },
   "devDependencies": {
     "turbo": "^2.5.0"

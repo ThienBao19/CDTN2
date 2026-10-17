@@ -82,6 +82,8 @@ services:
     environment:
       <<: *db-env
       PGPASSWORD: ${POSTGRES_PASSWORD}
+      # Tiền tố tên file, đổi khi chạy nhiều stack chung thư mục backups/
+      BACKUP_PREFIX: ${BACKUP_PREFIX:-patient_tracker}
     entrypoint: ["sh", "/backup.sh"]
     volumes:
       - ./backup.sh:/backup.sh:ro

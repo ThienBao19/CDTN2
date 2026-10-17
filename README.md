@@ -88,11 +88,14 @@ thông báo tới người nhà p95 1,04 s.
 | `pnpm test` | Unit test (Jest) |
 | `pnpm --filter @pt/api test:e2e` | Test API với CSDL test riêng (`DATABASE_URL_TEST`, tự migrate + seed) |
 | `pnpm --filter @pt/api test:cov:all` | Coverage gộp unit + e2e (báo cáo HTML ở `apps/api/coverage`) |
+| `pnpm test:ui` | Kiểm thử giao diện + chụp ảnh minh chứng (Playwright, xem [e2e/README.md](e2e/README.md)) |
+| `pnpm --filter @pt/api prisma:seed-demo` | Nạp dữ liệu demo cho buổi báo cáo |
 | `pnpm lint` | ESLint |
 | `pnpm db:studio` | Mở Prisma Studio xem dữ liệu |
 
 ## Tài liệu
 
+- [Báo cáo Word](docs/bao-cao/Bao-cao-CDTN2.docx) (bản PDF: [Bao-cao-CDTN2.pdf](docs/bao-cao/Bao-cao-CDTN2.pdf)): 8 chương, có ảnh minh chứng và số liệu; sơ đồ ở docs/bao-cao/hinh
 - [Quản lý dự án (Excel)](docs/quan-ly/Quan-ly-du-an.xlsx): product backlog, kế hoạch sprint, nhật ký buổi học, nhật ký công việc, thành viên
 - [Kết quả kiểm thử (Excel)](docs/kiem-thu/Ket-qua-kiem-thu.xlsx): test case, bug log, tổng hợp; ảnh minh chứng để trong `docs/kiem-thu/anh/`
 - Tài liệu dự án gốc và 10 bài giảng nằm ở thư mục gốc. Các file này chỉ để local và không đưa lên git.

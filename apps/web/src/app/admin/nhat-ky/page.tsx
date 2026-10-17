@@ -33,6 +33,9 @@ const ACTION_LABELS: Record<string, string> = {
   LINK: "Liên kết",
   UNLINK: "Hủy liên kết",
   LOCK: "Khóa tài khoản",
+  LOGIN: "Đăng nhập",
+  LOGIN_FAILED: "Đăng nhập sai",
+  CHANGE_PASSWORD: "Đổi mật khẩu",
 };
 const SELECT = "min-h-12 rounded-xl border border-border bg-surface px-3";
 
