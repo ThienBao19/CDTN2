@@ -1,0 +1,42 @@
+const { chapterTitle, h2, h3, p, bullets, img } = require('./lib');
+
+const PHONE = 6.5;
+
+module.exports = () => [
+  chapterTitle('Xây dựng sản phẩm'),
+  p('Sản phẩm gồm một API NestJS và một ứng dụng web Next.js phục vụ ba nhóm người dùng. Giao diện người nhà thiết kế cho điện thoại, ưu tiên người lớn tuổi: chữ lớn, nút cao tối thiểu 48 px, màu tương phản, chế độ tối tự động và cài được lên màn hình chính (PWA). Các ảnh trong chương được chụp tự động bằng Playwright trên bản triển khai Docker với dữ liệu demo.'),
+  h2('5.1. Trang chủ và đăng nhập'),
+  p('Trang chủ giới thiệu ba lối vào theo vai trò và hiển thị 5 giai đoạn của ca phẫu thuật. Các trang nội bộ đều yêu cầu đăng nhập; sau khi đăng nhập, người dùng được đưa về đúng khu vực của vai trò mình.'),
+  ...img('kiem-thu/anh/demo-01-trang-chu.png', 'Trang chủ', 12),
+  h2('5.2. Chức năng của nhân viên y tế'),
+  h3('Danh sách ca và tạo ca'),
+  p('Nhân viên xem các ca trong ngày, lọc theo ngày, phòng, trạng thái; danh sách tự cập nhật khi đồng nghiệp đổi trạng thái. Màn hình tạo ca cho phép chọn bệnh nhân có sẵn (tìm theo mã hoặc tên) hoặc tạo bệnh nhân mới ngay trong cùng biểu mẫu.'),
+  ...img('kiem-thu/anh/demo-02-nhan-vien-danh-sach-ca.png', 'Danh sách ca phẫu thuật trong ngày'),
+  h3('Cập nhật trạng thái'),
+  p('Chi tiết ca hiển thị thanh tiến trình 5 giai đoạn và một nút lớn “Chuyển sang: <trạng thái kế tiếp>”. Bấm nút sẽ hiện bước xác nhận, tránh bấm nhầm. Trường hợp cần quay lui hoặc bỏ bước, nhân viên mở mục “Điều chỉnh” và bắt buộc nhập lý do; lịch sử ghi rõ người cập nhật, thời điểm và đánh dấu điều chỉnh.'),
+  ...img('kiem-thu/anh/TC-01a-xac-nhan.png', 'Bước xác nhận trước khi chuyển trạng thái', 12),
+  h3('Đăng ký người nhà được theo dõi'),
+  p('Trong chi tiết ca, nhân viên nhập số điện thoại và họ tên người nhà rồi bấm “Đăng ký”. Người nhà không cần tạo tài khoản. Danh sách bên dưới cho biết ai đã được đăng ký, lúc nào, do nhân viên nào; nhân viên có thể gỡ quyền theo dõi bất cứ lúc nào.'),
+  ...img('kiem-thu/anh/UC-01-dang-ky-nguoi-nha.png', 'Nhân viên đăng ký người nhà cho ca phẫu thuật', 12),
+  h2('5.3. Ứng dụng của người nhà'),
+  p('Từ lúc mở ứng dụng, người nhà xem được trạng thái hiện tại sau tối đa 2 thao tác (mở danh sách → chọn bệnh nhân), đạt yêu cầu NFR-08 (tối đa 3 thao tác). Người nhà vào xem bằng số điện thoại, họ tên mình và họ tên bệnh nhân, không cần email hay mật khẩu; phiên được nhớ cho tới khi ca kết thúc. Màn hình nhận cập nhật qua SSE nên đổi ngay khi nhân viên bấm nút, không cần tải lại.'),
+  ...img('kiem-thu/anh/demo-04-nguoi-nha-danh-sach.png', 'Danh sách bệnh nhân đang theo dõi (có số thông báo chưa đọc)', PHONE),
+  ...img('kiem-thu/anh/demo-05-nguoi-nha-chi-tiet.png', 'Chi tiết trạng thái và lịch sử', PHONE),
+  ...img('kiem-thu/anh/TC-03a-nhap-thong-tin.png', 'Người nhà vào xem bằng SĐT + họ tên + họ tên bệnh nhân', PHONE),
+  ...img('kiem-thu/anh/demo-06-nguoi-nha-thong-bao.png', 'Danh sách thông báo', PHONE),
+  ...img('kiem-thu/anh/TC-08a-cai-dat.png', 'Cài đặt: bật/tắt thông báo đẩy, quản lý liên kết, đổi mật khẩu', PHONE),
+  p('Khi ứng dụng đang mở, mỗi lần ca chuyển sang giai đoạn mới điện thoại kêu một âm báo ngắn và rung nhẹ. Khi ca chuyển sang “Đã hoàn tất”, chuông reo và máy rung lặp lại cho tới khi người nhà bấm “Tắt chuông”; mục Cài đặt có nút để thử âm báo và chuông. Khi ứng dụng đang đóng hoặc tắt màn hình, thông báo đẩy vẫn hiện trên màn hình khóa; thông báo kết thúc ca được giữ lại tới khi người dùng tắt (Android rung dài, iPhone phát âm thông báo mặc định của máy).'),
+  ...img('kiem-thu/anh/TC-31c-hoi-suc.png', 'Thông báo đẩy trên màn hình khóa iPhone khi đổi giai đoạn', PHONE),
+  ...img('kiem-thu/anh/TC-31d-hoan-tat.png', 'Thông báo kết thúc ca trên màn hình khóa iPhone', PHONE),
+  ...img('kiem-thu/anh/TC-54-chuong-ket-thuc.png', 'Chuông báo ca phẫu thuật đã hoàn tất, reo tới khi bấm “Tắt chuông”', PHONE),
+  h2('5.4. Trang quản trị'),
+  ...bullets([
+    '**Tài khoản:** tạo tài khoản nhân viên/quản trị, đổi vai trò, khóa/mở khóa (khóa sẽ thu hồi phiên đang mở); quản trị viên không tự khóa được mình.',
+    '**Phòng và trạng thái:** thêm phòng, ngừng sử dụng phòng; sửa tên hiển thị và nội dung thông báo của từng trạng thái (áp dụng ngay cho lần đổi trạng thái tiếp theo).',
+    '**Nhật ký truy cập:** lọc theo người dùng, hành động, khoảng ngày; có phân trang.',
+  ]),
+  ...img('kiem-thu/anh/TC-28.png', 'Quản lý tài khoản (tài khoản vừa tạo đã bị khóa)'),
+  ...img('kiem-thu/anh/TC-30.png', 'Nhật ký truy cập lọc theo hành động'),
+  h2('5.5. Thông báo và cập nhật thời gian thực'),
+  p('Khi trạng thái hoặc lịch mổ thay đổi, API tạo thông báo cho từng người nhà còn liên kết, phát sự kiện tới kênh SSE và gửi push qua FCM ở nền. Kênh SSE chỉ chuyển sự kiện của những ca mà người nhà có liên kết còn hiệu lực. Polling 30 giây được giữ làm phương án dự phòng khi mất kết nối. Push FCM được bật bằng cấu hình (khóa service account và cấu hình web); khi chưa cấu hình, thông báo vẫn lưu và hiện trong ứng dụng, trạng thái gửi ghi là “bỏ qua”.'),
+];
