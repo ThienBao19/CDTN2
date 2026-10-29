@@ -1,12 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { evidence, login, mobilePage, registerFamily, STAFF, unique } from './helpers';
+import { evidence, familyEnter, login, mobilePage, STAFF, unique, uniquePhone } from './helpers';
 
-// Luồng trình diễn đầy đủ (mục 13.3): tạo ca → cấp mã → người nhà liên kết → đổi trạng thái → thông báo
+// Luồng trình diễn đầy đủ: tạo ca → đăng ký người nhà → người nhà vào xem → đổi trạng thái → thông báo
 test.describe.serial('Luồng chính nhân viên và người nhà', () => {
   let staff: Page;
   let family: Page;
   let surgeryUrl = '';
-  let code = '';
+  const contact = { phone: uniquePhone(), fullName: 'Võ Minh Tuấn' };
 
   test.beforeAll(async ({ browser }) => {
     staff = await browser.newPage();
@@ -22,7 +22,7 @@ test.describe.serial('Luồng chính nhân viên và người nhà', () => {
     await staff.getByLabel('Ngày sinh').fill('1968-07-21');
     await staff.getByLabel('Giới tính').selectOption('FEMALE');
     await staff.getByLabel('Tên ca').fill('Phẫu thuật cắt túi mật nội soi');
-    await staff.getByLabel('Giờ dự kiến').fill('2026-10-16T15:30');
+    await staff.getByLabel('Giờ dự kiến').fill('2026-10-17T15:30');
     await staff.getByLabel('Phòng mổ').selectOption({ label: 'Phòng mổ 2' });
     await staff.getByRole('button', { name: 'Tạo ca' }).click();
     await expect(staff).toHaveURL(/\/staff\/ca\//);
@@ -31,30 +31,24 @@ test.describe.serial('Luồng chính nhân viên và người nhà', () => {
     await evidence(staff, 'TC-16');
   });
 
-  test('UC-01: cấp mã theo dõi kèm QR cho người nhà', async () => {
-    await staff.getByRole('button', { name: 'Cấp mã theo dõi mới' }).click();
-    const codeText = staff.locator('span.font-mono.text-3xl');
-    await expect(codeText).toHaveText(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-    code = (await codeText.textContent()) ?? '';
-    await expect(staff.getByAltText(/QR mã/)).toBeVisible();
-    await evidence(staff, 'UC-01-cap-ma-QR');
+  test('UC-01: nhân viên đăng ký người nhà (SĐT + họ tên)', async () => {
+    await staff.getByLabel('Số điện thoại').fill(contact.phone);
+    await staff.getByLabel('Họ tên người nhà').fill(contact.fullName);
+    await staff.getByRole('button', { name: 'Đăng ký' }).click();
+    await expect(staff.getByText(`Đã đăng ký ${contact.fullName}`)).toBeVisible();
+    await evidence(staff, 'UC-01-dang-ky-nguoi-nha');
   });
 
-  test('TC-22: mở link QR khi chưa đăng nhập → đăng ký → mã được điền sẵn', async () => {
-    await family.goto(`/lien-ket?code=${code}`);
-    await expect(family).toHaveURL(/dang-nhap\?next=/);
-    await family.getByRole('link', { name: 'Đăng ký' }).click();
-    await registerFamily(family, 'Võ Minh Tuấn', `/lien-ket?code=${code}`);
-    await expect(family).toHaveURL(/lien-ket/);
-    await expect(family.getByLabel('Mã theo dõi (8 ký tự)')).toHaveValue(code);
-    await evidence(family, 'TC-22');
-  });
-
-  test('TC-03: người nhà liên kết và thấy trạng thái ca', async () => {
-    await family.getByRole('button', { name: 'Theo dõi bệnh nhân' }).click();
-    await expect(family).toHaveURL(/\/theo-doi\//);
+  test('TC-03: người nhà vào xem bằng SĐT + họ tên + tên bệnh nhân (không mật khẩu)', async () => {
+    await family.goto('/nguoi-nha');
+    await family.getByLabel('Số điện thoại của bạn').fill(contact.phone);
+    await family.getByLabel('Họ tên của bạn').fill(contact.fullName);
+    await family.getByLabel('Họ tên bệnh nhân').fill('Võ Thị Hạnh');
+    await evidence(family, 'TC-03a-nhap-thong-tin');
+    await family.getByRole('button', { name: 'Xem tình trạng bệnh nhân' }).click();
+    await expect(family).toHaveURL(/\/theo-doi$/);
+    await family.getByText('V. T. Hạnh').click();
     await expect(family.locator('.text-3xl.text-primary')).toHaveText('Đã tiếp nhận');
-    await expect(family.getByText('V. T. Hạnh')).toBeVisible();
     await evidence(family, 'TC-03');
   });
 
@@ -75,7 +69,7 @@ test.describe.serial('Luồng chính nhân viên và người nhà', () => {
 
   test('TC-24: đổi giờ mổ → người nhà nhận thông báo đổi lịch', async () => {
     await staff.getByText('Sửa thông tin ca (tên, giờ, phòng)').click();
-    await staff.getByLabel('Giờ dự kiến').fill('2026-10-16T16:30');
+    await staff.getByLabel('Giờ dự kiến').fill('2026-10-17T16:30');
     await staff.getByRole('button', { name: 'Lưu thay đổi' }).click();
     await expect(staff.getByText(/Đã lưu/)).toBeVisible();
     await evidence(staff, 'TC-24a-sua-ca');
@@ -84,12 +78,16 @@ test.describe.serial('Luồng chính nhân viên và người nhà', () => {
     await evidence(family, 'TC-24');
   });
 
-  test('TC-08: người nhà ngừng theo dõi ở trang Cài đặt', async () => {
+  test('TC-08: nhân viên gỡ quyền → người nhà không xem được nữa', async () => {
     await family.goto('/cai-dat');
     await evidence(family, 'TC-08a-cai-dat');
-    family.once('dialog', (d) => void d.accept());
-    await family.getByRole('button', { name: 'Hủy liên kết' }).click();
-    await expect(family.getByText('Chưa có liên kết nào.')).toBeVisible();
+    staff.once('dialog', (d) => void d.accept());
+    await staff.getByRole('button', { name: 'Gỡ quyền' }).click();
+    await expect(staff.getByText('Đã gỡ')).toBeVisible();
+    await family.goto('/theo-doi');
+    await expect(family).toHaveURL(/\/nguoi-nha$/);
+    await familyEnter(family, { ...contact, patientName: 'Võ Thị Hạnh' });
+    await expect(family.locator('p[role=alert]')).toHaveText(/chưa khớp/);
     await evidence(family, 'TC-08');
   });
 });

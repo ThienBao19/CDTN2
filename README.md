@@ -10,7 +10,7 @@ apps/
   api/      NestJS 11 + Prisma 6 + PostgreSQL 16   → http://localhost:4000/api
   web/      Next.js 15 (App Router, Tailwind 4)     → http://localhost:3000
             ├─ /           trang chọn vai trò
-            ├─ /lien-ket   PWA người nhà (liên kết mã/QR, theo dõi)
+            ├─ /nguoi-nha  người nhà vào xem bằng SĐT + họ tên + tên bệnh nhân (PWA)
             ├─ /staff      web nhân viên y tế
             └─ /admin      trang quản trị
 packages/
@@ -27,7 +27,7 @@ Yêu cầu: Node ≥ 20, pnpm 9, Docker Desktop.
 
 ```bash
 pnpm install
-cp apps/api/.env.example apps/api/.env        # điền SEED_PASSWORD, JWT_SECRET, TRACKING_CODE_SECRET
+cp apps/api/.env.example apps/api/.env        # điền SEED_PASSWORD, JWT_SECRET
 cp apps/web/.env.example apps/web/.env.local
 pnpm db:up                                     # PostgreSQL ở cổng 5440
 pnpm --filter @pt/shared build
@@ -36,8 +36,13 @@ pnpm db:seed                                   # 5 trạng thái, 3 phòng, 3 t�
 pnpm dev                                       # chạy API + web
 ```
 
-Tài khoản demo sau khi seed: `admin@example.com`, `staff@example.com`, `family@example.com`.
-Cả ba dùng mật khẩu `SEED_PASSWORD` trong `apps/api/.env`.
+Tài khoản sau khi seed (mật khẩu là `SEED_PASSWORD` trong `apps/api/.env`): quản trị viên `admin@benhvien.test`;
+nhân viên y tế `nhanvien1@benhvien.test`, `nhanvien2@benhvien.test`, `nhanvien3@benhvien.test`.
+
+Chỉ nhân viên và quản trị viên đăng nhập bằng mật khẩu. Người nhà **không có tài khoản**: nhân viên đăng ký
+số điện thoại + họ tên người nhà vào ca, người nhà mở `/nguoi-nha` và nhập số điện thoại, họ tên mình, họ tên
+bệnh nhân. Dữ liệu demo (`pnpm --filter @pt/api prisma:seed-demo`) có sẵn người nhà `0901234567` – Nguyễn Thị Mai,
+theo dõi bệnh nhân Nguyễn Văn An và Trần Thị Bích. Danh sách API: [docs/API.md](docs/API.md).
 
 ## Thông báo đẩy (Firebase Cloud Messaging)
 
@@ -57,7 +62,7 @@ Toàn bộ hệ thống (PostgreSQL, API, web, nginx, sao lưu tự động) ch�
 cp deploy/.env.example deploy/.env
 ```
 
-Điền mật khẩu CSDL, `JWT_SECRET`, `TRACKING_CODE_SECRET` (mỗi khóa ≥ 32 ký tự), `SEED_PASSWORD` trong `deploy/.env`, rồi:
+Điền mật khẩu CSDL, `JWT_SECRET` (≥ 32 ký tự), `SEED_PASSWORD` trong `deploy/.env`, rồi:
 
 ```bash
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build

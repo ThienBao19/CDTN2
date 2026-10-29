@@ -1,6 +1,9 @@
 // Dữ liệu demo cho buổi báo cáo: các ca hôm nay ở đủ trạng thái, có lịch sử và thông báo.
 // Chạy sau seed chính: pnpm --filter @pt/api prisma:seed-demo (chạy lại không tạo trùng).
-import { DeliveryStatus, Gender, PrismaClient } from '@prisma/client';
+import { DeliveryStatus, Gender, PrismaClient, Role } from '@prisma/client';
+
+// Người nhà demo do nhân viên đăng ký: vào xem bằng SĐT + họ tên + tên bệnh nhân
+export const DEMO_FAMILY = { phone: '0901234567', fullName: 'Nguyễn Thị Mai' };
 
 const prisma = new PrismaClient();
 const MINUTE = 60 * 1000;
@@ -127,20 +130,12 @@ async function createCase(
       })),
     });
     if (!c.linkFamily) return;
-    const code = await tx.trackingCode.create({
-      data: {
-        surgeryId: surgery.id,
-        codeHash: `demo-${c.code}-${Date.now()}`,
-        expiresAt: new Date(Date.now() + 24 * 60 * MINUTE),
-        status: 'USED',
-        createdById: ids.staffId,
-      },
-    });
     await tx.familyLink.create({
       data: {
         userId: ids.familyId,
         surgeryId: surgery.id,
-        codeId: code.id,
+        contactName: DEMO_FAMILY.fullName,
+        addedById: ids.staffId,
         linkedAt: times[0],
       },
     });
@@ -158,12 +153,16 @@ async function createCase(
 }
 
 async function main() {
-  const [staff, family] = await Promise.all([
-    prisma.user.findUnique({ where: { email: 'staff@example.com' } }),
-    prisma.user.findUnique({ where: { email: 'family@example.com' } }),
-  ]);
-  if (!staff || !family)
-    throw new Error('Chạy seed chính trước (pnpm db:seed)');
+  const staff = await prisma.user.findUnique({
+    where: { email: 'nhanvien1@benhvien.test' },
+  });
+  if (!staff) throw new Error('Chạy seed chính trước (pnpm db:seed)');
+  // Người nhà không có mật khẩu; nhân viên đăng ký SĐT + họ tên vào ca
+  const family = await prisma.user.upsert({
+    where: { phone: DEMO_FAMILY.phone },
+    update: {},
+    create: { ...DEMO_FAMILY, role: Role.FAMILY },
+  });
   let created = 0;
   for (const c of CASES) {
     const exists = await prisma.patient.findUnique({
@@ -174,7 +173,7 @@ async function main() {
     created += 1;
   }
   console.info(
-    `Dữ liệu demo: tạo mới ${created}/${CASES.length} ca (người nhà demo theo dõi 2 ca)`,
+    `Dữ liệu demo: tạo mới ${created}/${CASES.length} ca. Người nhà demo: ${DEMO_FAMILY.phone} – ${DEMO_FAMILY.fullName}, bệnh nhân Nguyễn Văn An hoặc Trần Thị Bích`,
   );
 }
 

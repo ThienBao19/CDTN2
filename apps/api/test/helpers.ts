@@ -18,9 +18,10 @@ export async function createTestApp(): Promise<TestApp> {
 }
 
 export const SEED_USERS = {
-  admin: 'admin@example.com',
-  staff: 'staff@example.com',
-  family: 'family@example.com',
+  admin: 'admin@benhvien.test',
+  staff: 'nhanvien1@benhvien.test',
+  staff2: 'nhanvien2@benhvien.test',
+  staff3: 'nhanvien3@benhvien.test',
 } as const;
 
 export function seedPassword(): string {
@@ -43,17 +44,14 @@ export async function login(
 
 let counter = 0;
 
-// Tạo tài khoản người nhà mới để các kịch bản không ảnh hưởng nhau
-export async function registerFamily(app: TestApp): Promise<string> {
+// Số điện thoại không trùng giữa các lần chạy test
+export function uniquePhone(): string {
   counter += 1;
-  const email = `family${Date.now()}${counter}@example.com`;
-  const password = 'MatKhau@123';
-  await request(app.getHttpServer())
-    .post('/api/auth/register')
-    .send({ fullName: 'Người nhà test', email, password })
-    .expect(201);
-  return login(app, email, password);
+  const tail = String(counter % 100).padStart(2, '0');
+  return `09${String(Date.now()).slice(-6)}${tail}`;
 }
+
+export const PATIENT_NAME = 'Nguyễn Văn An';
 
 export function api(app: TestApp, token?: string) {
   const server = app.getHttpServer();
@@ -94,28 +92,43 @@ export async function createSurgery(
   return (surgery.body as { id: string }).id;
 }
 
-export async function issueCode(
+export type FamilyContact = { phone: string; fullName: string };
+
+// Nhân viên đăng ký người nhà cho ca (thay cho cấp mã/QR)
+export async function addFamily(
   app: TestApp,
   staffToken: string,
   surgeryId: string,
-): Promise<{ id: string; code: string }> {
+  contact: FamilyContact = { phone: uniquePhone(), fullName: 'Trần Thị Mai' },
+): Promise<FamilyContact & { id: string }> {
   const res = await api(app, staffToken)
-    .post(`/surgeries/${surgeryId}/tracking-codes`)
-    .send({})
+    .post(`/surgeries/${surgeryId}/family-contacts`)
+    .send(contact)
     .expect(201);
-  return res.body as { id: string; code: string };
+  return { ...contact, id: (res.body as { id: string }).id };
 }
 
-// Tạo người nhà mới và liên kết với ca bằng mã do nhân viên cấp
+// Người nhà vào xem bằng SĐT + họ tên + tên bệnh nhân, trả về token phiên
+export async function familyAccess(
+  app: TestApp,
+  contact: FamilyContact,
+  patientName = PATIENT_NAME,
+): Promise<string> {
+  const res = await api(app)
+    .post('/auth/family-access')
+    .send({ phone: contact.phone, fullName: contact.fullName, patientName })
+    .expect(200);
+  return (res.body as { accessToken: string }).accessToken;
+}
+
+// Đăng ký người nhà mới cho ca rồi vào xem, trả về token phiên của người nhà
 export async function linkNewFamily(
   app: TestApp,
   staffToken: string,
   surgeryId: string,
 ): Promise<string> {
-  const { code } = await issueCode(app, staffToken, surgeryId);
-  const family = await registerFamily(app);
-  await api(app, family).post('/links').send({ code }).expect(201);
-  return family;
+  const contact = await addFamily(app, staffToken, surgeryId);
+  return familyAccess(app, contact);
 }
 
 // Chờ tới khi điều kiện đúng (dùng cho việc gửi push chạy nền)

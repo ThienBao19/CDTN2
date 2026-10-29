@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { evidence, FAMILY, login, mobilePage, STAFF } from './helpers';
+import { DEMO_FAMILY, evidence, familyEnter, login, mobilePage, STAFF } from './helpers';
 
 // Ảnh các màn hình chính với dữ liệu demo, dùng cho báo cáo và slide
 test.describe.serial('Màn hình demo cho báo cáo', () => {
@@ -16,7 +16,7 @@ test.describe.serial('Màn hình demo cho báo cáo', () => {
 
   test('ứng dụng người nhà trên điện thoại', async ({ browser }) => {
     const family = await mobilePage(browser);
-    await login(family, FAMILY);
+    await familyEnter(family, DEMO_FAMILY);
     await expect(family.getByText('N. V. An')).toBeVisible();
     await evidence(family, 'demo-04-nguoi-nha-danh-sach');
     await family.getByText('N. V. An').click();
@@ -24,7 +24,8 @@ test.describe.serial('Màn hình demo cho báo cáo', () => {
     await evidence(family, 'demo-05-nguoi-nha-chi-tiet');
     await family.goto('/thong-bao');
     await evidence(family, 'demo-06-nguoi-nha-thong-bao');
-    await family.goto('/lien-ket');
-    await evidence(family, 'demo-07-nguoi-nha-lien-ket');
+    await family.context().clearCookies();
+    await family.goto('/nguoi-nha');
+    await evidence(family, 'demo-07-nguoi-nha-vao-xem');
   });
 });

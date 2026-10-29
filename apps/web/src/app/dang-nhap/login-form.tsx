@@ -33,11 +33,9 @@ export function LoginForm() {
     }
   }
 
-  const registerHref = next ? `/dang-ky?next=${encodeURIComponent(next)}` : "/dang-ky";
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Field id="identifier" name="identifier" label="Email hoặc số điện thoại" required autoComplete="username" />
+      <Field id="identifier" name="identifier" label="Email" required autoComplete="username" />
       <Field id="password" name="password" label="Mật khẩu" type="password" required autoComplete="current-password" />
       {isExpired && !error && (
         <p className="rounded-lg bg-amber-50 px-4 py-3 text-amber-800">
@@ -49,9 +47,9 @@ export function LoginForm() {
         {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
       </Button>
       <p className="text-center text-muted">
-        Người nhà chưa có tài khoản?{" "}
-        <Link href={registerHref} className="font-semibold text-primary">
-          Đăng ký
+        Người nhà bệnh nhân?{" "}
+        <Link href="/nguoi-nha" className="font-semibold text-primary">
+          Vào xem bằng số điện thoại
         </Link>
       </p>
     </form>

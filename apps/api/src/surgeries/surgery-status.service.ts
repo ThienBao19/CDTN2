@@ -83,9 +83,11 @@ export class SurgeryStatusService {
       entityId: surgeryId,
     });
     // FR-09: lưu thông báo, đẩy realtime và gửi push cho người nhà đã liên kết
+    const isFinal = await this.statuses.isFinal(target);
     await this.notifications.notifySurgery(
       surgeryId,
       target.notificationMessage,
+      isFinal ? 'final' : 'stage',
     );
     return updated;
   }

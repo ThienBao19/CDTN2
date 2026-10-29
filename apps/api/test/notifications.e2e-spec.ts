@@ -1,12 +1,12 @@
 import { DeliveryStatus } from '@prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 import {
+  addFamily,
   api,
   createSurgery,
   createTestApp,
   linkNewFamily,
   login,
-  registerFamily,
   SEED_USERS,
   TestApp,
   waitFor,
@@ -63,17 +63,19 @@ describe('Thông báo (e2e) — FR-09, BR-05, TC-09', () => {
 
   it('BR-05: does not notify unlinked or revoked family members', async () => {
     const surgeryId = await createSurgery(app, staff);
-    const revoked = await linkNewFamily(app, staff, surgeryId);
-    const [link] = (await api(app, revoked).get('/links')).body as Array<{
-      id: string;
-    }>;
-    await api(app, revoked).delete(`/links/${link.id}`).expect(204);
-    const stranger = await registerFamily(app);
+    const revoked = await addFamily(app, staff, surgeryId);
+    await api(app, staff).delete(`/links/${revoked.id}`).expect(204);
+    // Người lạ: được đăng ký cho một ca khác
+    const stranger = await linkNewFamily(
+      app,
+      staff,
+      await createSurgery(app, staff),
+    );
     await changeStatus(surgeryId, 'PREPARING');
-    for (const token of [revoked, stranger]) {
-      const res = await api(app, token).get('/my/notifications').expect(200);
-      expect((res.body as NotificationList).items).toHaveLength(0);
-    }
+    const res = await api(app, stranger).get('/my/notifications').expect(200);
+    expect((res.body as NotificationList).items).toHaveLength(0);
+    // Người đã bị gỡ không còn liên kết nên không có thông báo nào cho ca này
+    expect(await prisma.notification.count({ where: { surgeryId } })).toBe(0);
   });
 
   it('notifies when the schedule changes but not when only the title changes', async () => {
@@ -110,7 +112,11 @@ describe('Thông báo (e2e) — FR-09, BR-05, TC-09', () => {
   });
 
   it('registers and removes a device token for push', async () => {
-    const family = await registerFamily(app);
+    const family = await linkNewFamily(
+      app,
+      staff,
+      await createSurgery(app, staff),
+    );
     const token = `test-token-${Date.now()}`;
     await api(app, family)
       .post('/devices')

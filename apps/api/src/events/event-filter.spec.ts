@@ -22,6 +22,7 @@ describe('eventVisibility', () => {
       type: 'notification.created' as const,
       userId: 'f1',
       surgeryId: 'x',
+      alert: 'stage' as const,
     };
     expect(eventVisibility(family, event)).toBe('yes');
     expect(eventVisibility(staff, event)).toBe('no');

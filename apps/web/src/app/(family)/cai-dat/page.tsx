@@ -7,10 +7,10 @@ import { api } from "@/lib/api";
 import type { FamilySurgery } from "@/lib/types";
 import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
-import { PasswordForm } from "./password-form";
 import { PushToggle } from "./push-toggle";
+import { SoundTest } from "./sound-test";
 
-// Cài đặt (mục 12.1): quản lý liên kết, bật/tắt thông báo, đổi mật khẩu
+// Cài đặt (mục 12.1): quản lý liên kết, bật/tắt thông báo (người nhà không có mật khẩu)
 export default function SettingsPage() {
   const user = useMe();
   const { data: links, reload } = usePolling<FamilySurgery[]>("/my/surgeries");
@@ -26,6 +26,7 @@ export default function SettingsPage() {
       <AppHeader title="Cài đặt" user={user} />
       <FamilyNav />
       <PushToggle />
+      <SoundTest />
       <Card className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Bệnh nhân đang theo dõi</h2>
         {links?.length === 0 && <p className="text-muted">Chưa có liên kết nào.</p>}
@@ -38,7 +39,6 @@ export default function SettingsPage() {
           </div>
         ))}
       </Card>
-      <PasswordForm />
     </main>
   );
 }

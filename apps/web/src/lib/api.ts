@@ -1,3 +1,5 @@
+import { loginPathFor } from "./format";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -36,12 +38,14 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return body as T;
 }
 
-// Phiên hết hạn/bị thu hồi: về trang đăng nhập, giữ nguyên đường dẫn và query
-// (vd /lien-ket?code=... từ mã QR) để quay lại đúng chỗ sau khi đăng nhập
+// Phiên hết hạn/bị thu hồi: người nhà về /nguoi-nha nhập lại thông tin; nhân viên về
+// trang đăng nhập, giữ nguyên đường dẫn để quay lại đúng chỗ sau khi đăng nhập
 function redirectToLogin(): void {
-  if (typeof window === "undefined" || window.location.pathname === "/dang-nhap") return;
+  if (typeof window === "undefined") return;
+  if (["/dang-nhap", "/nguoi-nha"].includes(window.location.pathname)) return;
   const here = window.location.pathname + window.location.search;
-  window.location.assign(`/dang-nhap?next=${encodeURIComponent(here)}`);
+  const target = loginPathFor(window.location.pathname);
+  window.location.assign(target === "/nguoi-nha" ? target : `${target}?next=${encodeURIComponent(here)}`);
 }
 
 export const api = {

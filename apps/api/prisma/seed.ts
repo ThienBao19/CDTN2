@@ -56,17 +56,27 @@ async function seedUsers() {
     throw new Error('Thiếu SEED_PASSWORD trong apps/api/.env');
   }
   const passwordHash = await argon2.hash(password);
+  // Người nhà không có tài khoản: nhân viên đăng ký SĐT + họ tên người nhà vào từng ca
   const users = [
-    { fullName: 'Quản trị viên', email: 'admin@example.com', role: Role.ADMIN },
     {
-      fullName: 'Nhân viên y tế',
-      email: 'staff@example.com',
+      fullName: 'Quản trị viên',
+      email: 'admin@benhvien.test',
+      role: Role.ADMIN,
+    },
+    {
+      fullName: 'Nguyễn Thị Lan',
+      email: 'nhanvien1@benhvien.test',
       role: Role.STAFF,
     },
     {
-      fullName: 'Người nhà demo',
-      email: 'family@example.com',
-      role: Role.FAMILY,
+      fullName: 'Trần Minh Khoa',
+      email: 'nhanvien2@benhvien.test',
+      role: Role.STAFF,
+    },
+    {
+      fullName: 'Phạm Thu Hà',
+      email: 'nhanvien3@benhvien.test',
+      role: Role.STAFF,
     },
   ];
   for (const user of users) {
@@ -82,7 +92,9 @@ async function main() {
   await seedStatuses();
   await seedRooms();
   await seedUsers();
-  console.info('Seed xong: 5 trạng thái, 3 phòng, 3 tài khoản demo');
+  console.info(
+    'Seed xong: 5 trạng thái, 3 phòng, 1 quản trị viên, 3 nhân viên y tế',
+  );
 }
 
 main()

@@ -11,7 +11,7 @@ import { useEvents } from "@/lib/use-events";
 import { useMe } from "@/lib/use-me";
 import { usePolling } from "@/lib/use-polling";
 import { CancelPanel } from "./cancel-panel";
-import { CodesPanel } from "./codes-panel";
+import { FamilyContactsPanel } from "./family-contacts-panel";
 import { EditPanel } from "./edit-panel";
 import { StatusPanel } from "./status-panel";
 
@@ -58,7 +58,7 @@ export default function StaffSurgeryPage() {
           {canUpdateStatus && statuses && (
             <StatusPanel surgery={s} statuses={statuses} onChanged={reloadAll} />
           )}
-          <CodesPanel surgeryId={s.id} canIssue={isActive && !isFinal} />
+          <FamilyContactsPanel surgeryId={s.id} canAdd={isActive && !isFinal} />
           <section className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold">Lịch sử trạng thái</h2>
             <HistoryList entries={history.data ?? []} />

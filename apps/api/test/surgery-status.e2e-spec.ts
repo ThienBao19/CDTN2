@@ -2,6 +2,7 @@ import {
   api,
   createSurgery,
   createTestApp,
+  linkNewFamily,
   login,
   SEED_USERS,
   TestApp,
@@ -88,7 +89,7 @@ describe('Ca phẫu thuật & trạng thái (e2e) — FR-03, FR-04, FR-05, FR-10
 
   it('TC-07: forbids family and admin from updating status', async () => {
     const id = await createSurgery(app, staff);
-    const family = await login(app, SEED_USERS.family);
+    const family = await linkNewFamily(app, staff, id);
     const admin = await login(app, SEED_USERS.admin);
     for (const token of [family, admin]) {
       await api(app, token)

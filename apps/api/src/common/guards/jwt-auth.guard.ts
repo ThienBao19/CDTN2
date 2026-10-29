@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { LinkStatus, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { AuthRequest, JwtPayload } from '../types/auth-user';
@@ -65,6 +66,15 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException(
         'Phiên đăng nhập đã bị thu hồi, vui lòng đăng nhập lại',
       );
+    }
+    // Người nhà chỉ còn phiên khi còn ít nhất một liên kết hiệu lực (hết khi ca kết thúc)
+    if (user.role === Role.FAMILY) {
+      const activeLinks = await this.prisma.familyLink.count({
+        where: { userId: user.id, status: LinkStatus.ACTIVE },
+      });
+      if (activeLinks === 0) {
+        throw new UnauthorizedException('Phiên theo dõi đã kết thúc');
+      }
     }
     req.user = { id: user.id, role: user.role, fullName: user.fullName };
     return true;

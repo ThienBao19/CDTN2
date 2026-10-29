@@ -76,8 +76,19 @@ describe('NotificationsService.deliver', () => {
     expect(tokens).toEqual(['t1']);
     expect(message).toMatchObject({
       body: notification.content,
-      data: { url: '/theo-doi/s1' },
+      data: { url: '/theo-doi/s1', alert: 'info' },
     });
+  });
+
+  it('marks the final stage so the device rings until dismissed', async () => {
+    const { service, send } = setup({
+      isEnabled: true,
+      tokens: ['t1'],
+      results: [{ successCount: 1, invalidTokens: [], errors: [] }],
+    });
+    await service.deliver(notification, 'final');
+    const [, message] = send.mock.calls[0];
+    expect(message).toMatchObject({ data: { alert: 'final' } });
   });
 
   it('retries on temporary errors then succeeds', async () => {

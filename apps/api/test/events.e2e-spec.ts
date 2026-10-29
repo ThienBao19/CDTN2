@@ -6,7 +6,6 @@ import {
   createTestApp,
   linkNewFamily,
   login,
-  registerFamily,
   SEED_USERS,
   TestApp,
 } from './helpers';
@@ -60,7 +59,10 @@ describe('Cập nhật thời gian thực qua SSE (e2e) — mục 11.2', () => {
       port,
       await linkNewFamily(app, staff, surgeryId),
     );
-    const stranger = await openStream(port, await registerFamily(app));
+    const stranger = await openStream(
+      port,
+      await linkNewFamily(app, staff, await createSurgery(app, staff)),
+    );
     try {
       await api(app, staff)
         .post(`/surgeries/${surgeryId}/status`)

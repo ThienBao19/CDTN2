@@ -25,7 +25,7 @@ export function todayVN(): string {
 }
 
 const ROLE_AREAS: Record<string, string[]> = {
-  FAMILY: ["/theo-doi", "/lien-ket", "/thong-bao", "/cai-dat"],
+  FAMILY: ["/theo-doi", "/thong-bao", "/cai-dat"],
   STAFF: ["/staff"],
   ADMIN: ["/admin", "/staff"],
 };
@@ -43,4 +43,11 @@ export function safeNextPath(next: string | null, role: string): string {
   const isAllowed =
     isInternal && areas.some((a) => next === a || next.startsWith(a + "/") || next.startsWith(a + "?"));
   return isAllowed ? next : homeForRole(role);
+}
+
+const FAMILY_AREAS = ["/theo-doi", "/thong-bao", "/cai-dat"];
+
+// Hết phiên: người nhà nhập lại thông tin ở /nguoi-nha, nhân viên đăng nhập ở /dang-nhap
+export function loginPathFor(pathname: string): string {
+  return FAMILY_AREAS.some((a) => pathname === a || pathname.startsWith(a + "/")) ? "/nguoi-nha" : "/dang-nhap";
 }

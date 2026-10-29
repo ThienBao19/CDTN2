@@ -16,7 +16,7 @@ export function AppHeader({ title, user, backHref }: Props) {
 
   async function handleLogout() {
     await api.post("/auth/logout").catch(() => undefined);
-    router.replace("/dang-nhap");
+    router.replace(user?.role === "FAMILY" ? "/nguoi-nha" : "/dang-nhap");
   }
 
   return (
@@ -33,7 +33,7 @@ export function AppHeader({ title, user, backHref }: Props) {
         <div className="flex items-center gap-3 text-sm">
           <span className="text-muted">{user.fullName}</span>
           <button type="button" onClick={handleLogout} className="rounded-lg border border-border px-3 py-2">
-            Đăng xuất
+            {user.role === "FAMILY" ? "Thoát" : "Đăng xuất"}
           </button>
         </div>
       )}

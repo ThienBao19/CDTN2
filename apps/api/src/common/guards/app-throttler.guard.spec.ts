@@ -72,4 +72,25 @@ describe('throttleKey', () => {
   it('uses the IP for anonymous requests', () => {
     expect(throttleKey(req({ ip: '9.9.9.9' }), verify)).toBe('ip:9.9.9.9');
   });
+
+  it('keys family access attempts by phone number, ignoring formatting and IP', () => {
+    const a = throttleKey(
+      req({
+        path: '/api/auth/family-access',
+        ip: '1.1.1.1',
+        body: { phone: '0901 234 567' },
+      }),
+      verify,
+    );
+    const b = throttleKey(
+      req({
+        path: '/api/auth/family-access',
+        ip: '2.2.2.2',
+        body: { phone: '0901234567' },
+      }),
+      verify,
+    );
+    expect(a).toBe('family:0901234567');
+    expect(b).toBe(a);
+  });
 });

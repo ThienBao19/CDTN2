@@ -27,7 +27,7 @@ export default function FollowListPage() {
       <ErrorText>{error}</ErrorText>
       {items?.length === 0 && (
         <p className="text-muted">
-          Bạn chưa theo dõi bệnh nhân nào. Hãy nhập mã do bệnh viện cung cấp.
+          Chưa có ca phẫu thuật nào đang theo dõi.
         </p>
       )}
       <ul className="flex flex-col gap-3">
@@ -47,12 +47,10 @@ export default function FollowListPage() {
           </li>
         ))}
       </ul>
-      <Link
-        href="/lien-ket"
-        className="min-h-12 rounded-xl bg-primary px-5 py-3 text-center font-semibold text-white"
-      >
-        + Thêm bệnh nhân
-      </Link>
+      <p className="rounded-xl bg-surface px-4 py-3 text-sm text-muted">
+        Thiếu bệnh nhân? Nhờ nhân viên y tế đăng ký số điện thoại của bạn vào ca phẫu thuật, rồi vào lại
+        bằng họ tên bệnh nhân đó.
+      </p>
     </main>
   );
 }

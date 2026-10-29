@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DeliveryStatus, LinkStatus, Notification } from '@prisma/client';
-import { EventsService } from '../events/events.service';
+import { EventsService, NotifyAlert } from '../events/events.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PushProvider, PushResult } from '../push/push-provider';
 import { realSleep, Sleep, withRetry } from './retry';
@@ -33,6 +33,7 @@ export class NotificationsService {
   async notifySurgery(
     surgeryId: string,
     content: string,
+    alert: NotifyAlert = 'info',
   ): Promise<Notification[]> {
     this.events.emit({ type: 'surgery.updated', surgeryId });
     const links = await this.prisma.familyLink.findMany({
@@ -49,10 +50,11 @@ export class NotificationsService {
         type: 'notification.created',
         userId: n.userId,
         surgeryId,
+        alert,
       }),
     );
     // Gửi push nền để không làm chậm thao tác của nhân viên
-    void Promise.all(created.map((n) => this.deliver(n))).catch(
+    void Promise.all(created.map((n) => this.deliver(n, alert))).catch(
       (error: unknown) =>
         this.logger.error(
           'Lỗi gửi thông báo',
@@ -62,7 +64,10 @@ export class NotificationsService {
     return created;
   }
 
-  async deliver(notification: Notification): Promise<DeliveryStatus> {
+  async deliver(
+    notification: Notification,
+    alert: NotifyAlert = 'info',
+  ): Promise<DeliveryStatus> {
     const devices = await this.prisma.deviceToken.findMany({
       where: { userId: notification.userId },
       select: { token: true },
@@ -77,6 +82,7 @@ export class NotificationsService {
       data: {
         surgeryId: notification.surgeryId,
         url: `/theo-doi/${notification.surgeryId}`,
+        alert,
       },
     };
     let tokens = devices.map((d) => d.token);

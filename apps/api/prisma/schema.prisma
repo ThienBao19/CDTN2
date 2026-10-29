@@ -34,12 +34,6 @@ enum RoomType {
   OTHER
 }
 
-enum TrackingCodeStatus {
-  PENDING
-  USED
-  REVOKED
-}
-
 enum LinkStatus {
   ACTIVE
   REVOKED
@@ -69,7 +63,8 @@ model User {
   fullName     String     @map("full_name")
   email        String?    @unique
   phone        String?    @unique
-  passwordHash String     @map("password_hash")
+  // Người nhà không có mật khẩu: vào xem bằng SĐT + họ tên + tên bệnh nhân
+  passwordHash String?    @map("password_hash")
   role         Role       @default(FAMILY)
   status       UserStatus @default(ACTIVE)
   // Tăng khi đổi mật khẩu/khóa để vô hiệu mọi phiên đăng nhập cũ
@@ -78,8 +73,8 @@ model User {
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
   statusUpdates    StatusHistory[]
-  createdCodes     TrackingCode[]
   familyLinks      FamilyLink[]
+  addedLinks       FamilyLink[]    @relation("LinkAddedBy")
   notifications    Notification[]
   deviceTokens     DeviceToken[]
   auditLogs        AuditLog[]
@@ -132,7 +127,6 @@ model Surgery {
   currentStatus StatusDefinition @relation(fields: [currentStatusId], references: [id])
   createdBy     User             @relation(fields: [createdById], references: [id])
   history       StatusHistory[]
-  trackingCodes TrackingCode[]
   familyLinks   FamilyLink[]
   notifications Notification[]
 
@@ -178,37 +172,20 @@ model StatusHistory {
   @@map("status_history")
 }
 
-model TrackingCode {
-  id          String             @id @default(uuid())
-  surgeryId   String             @map("surgery_id")
-  // Chỉ lưu hash của mã; mã gốc chỉ hiển thị một lần khi tạo
-  codeHash    String             @unique @map("code_hash")
-  expiresAt   DateTime           @map("expires_at")
-  status      TrackingCodeStatus @default(PENDING)
-  createdById String             @map("created_by")
-  createdAt   DateTime           @default(now()) @map("created_at")
-  revokedAt   DateTime?          @map("revoked_at")
-
-  surgery   Surgery      @relation(fields: [surgeryId], references: [id])
-  createdBy User         @relation(fields: [createdById], references: [id])
-  links     FamilyLink[]
-
-  @@index([surgeryId])
-  @@map("tracking_codes")
-}
-
 model FamilyLink {
-  id        String     @id @default(uuid())
-  userId    String     @map("user_id")
-  surgeryId String     @map("surgery_id")
-  codeId    String     @map("code_id")
-  linkedAt  DateTime   @default(now()) @map("linked_at")
-  status    LinkStatus @default(ACTIVE)
-  revokedAt DateTime?  @map("revoked_at")
+  id          String     @id @default(uuid())
+  userId      String     @map("user_id")
+  surgeryId   String     @map("surgery_id")
+  // Họ tên người nhà do nhân viên đăng ký; người nhà phải nhập khớp để vào xem
+  contactName String?    @map("contact_name")
+  addedById   String?    @map("added_by")
+  linkedAt    DateTime   @default(now()) @map("linked_at")
+  status      LinkStatus @default(ACTIVE)
+  revokedAt   DateTime?  @map("revoked_at")
 
-  user    User         @relation(fields: [userId], references: [id])
-  surgery Surgery      @relation(fields: [surgeryId], references: [id])
-  code    TrackingCode @relation(fields: [codeId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  surgery Surgery @relation(fields: [surgeryId], references: [id])
+  addedBy User?   @relation("LinkAddedBy", fields: [addedById], references: [id])
 
   @@unique([userId, surgeryId])
   @@index([userId])

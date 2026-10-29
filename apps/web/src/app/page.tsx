@@ -1,19 +1,21 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { StatusSteps } from "@/components/status-steps";
 import { fetchHealth } from "@/lib/server-health";
+import { sessionHome } from "@/lib/server-session";
 
 export const dynamic = "force-dynamic";
 
 const ENTRIES = [
   {
-    href: "/theo-doi",
+    href: "/nguoi-nha",
     title: "Tôi là người nhà",
-    desc: "Nhập mã hoặc quét QR để theo dõi ca phẫu thuật",
+    desc: "Nhập số điện thoại, họ tên bạn và họ tên bệnh nhân",
   },
   {
     href: "/staff",
     title: "Nhân viên y tế",
-    desc: "Quản lý ca, cập nhật trạng thái, cấp mã theo dõi",
+    desc: "Quản lý ca, cập nhật trạng thái, đăng ký người nhà",
   },
   {
     href: "/admin",
@@ -23,6 +25,9 @@ const ENTRIES = [
 ];
 
 export default async function Home() {
+  // Mở lại app (PWA) khi phiên còn hạn: vào thẳng trang của vai trò
+  const home = await sessionHome();
+  if (home) redirect(home);
   const health = await fetchHealth();
 
   return (

@@ -36,12 +36,12 @@ const DIAGRAMS: Record<string, string> = {
   status_definitions ||--o{ surgeries : "trạng thái hiện tại"
   status_definitions ||--o{ status_history : "trạng thái"
   surgeries ||--o{ status_history : "lịch sử"
-  surgeries ||--o{ tracking_codes : "mã theo dõi"
-  surgeries ||--o{ family_links : "liên kết"
+  surgeries ||--o{ family_links : "người nhà được đăng ký"
   surgeries ||--o{ notifications : "thông báo"
-  tracking_codes ||--o{ family_links : "dùng để liên kết"
   users { uuid id PK
     string role
+    string phone UK
+    string password_hash "rỗng với người nhà"
     int token_version }
   surgeries { uuid id PK
     uuid patient_id FK
@@ -52,13 +52,11 @@ const DIAGRAMS: Record<string, string> = {
     int status_id FK
     datetime changed_at
     bool is_override }
-  tracking_codes { uuid id PK
-    string code_hash UK
-    datetime expires_at
-    string status }
   family_links { uuid id PK
     uuid user_id FK
     uuid surgery_id FK
+    string contact_name "họ tên để đối chiếu"
+    uuid added_by FK "nhân viên đăng ký"
     string status }`,
   'luong-thong-bao': `sequenceDiagram
   autonumber

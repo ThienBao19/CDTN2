@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "./api";
+import { loginPathFor } from "./format";
 import type { User } from "./types";
 
 // Lấy người dùng hiện tại; hết phiên thì quay về trang đăng nhập
@@ -18,7 +19,8 @@ export function useMe(): User | null {
         if (err instanceof ApiError && err.status === 401) {
           // Giữ cả query (vd ?code= của QR) để quay lại đúng chỗ sau khi đăng nhập
           const here = window.location.pathname + window.location.search;
-          router.replace(`/dang-nhap?next=${encodeURIComponent(here)}`);
+          const target = loginPathFor(window.location.pathname);
+          router.replace(target === "/nguoi-nha" ? target : `${target}?next=${encodeURIComponent(here)}`);
         }
       });
   }, [router]);

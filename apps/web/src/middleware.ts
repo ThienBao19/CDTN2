@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { loginPathFor } from "@/lib/format";
 
 const AUTH_COOKIE = "pt_token";
 
@@ -6,8 +7,12 @@ const AUTH_COOKIE = "pt_token";
 export function middleware(req: NextRequest) {
   if (req.cookies.has(AUTH_COOKIE)) return NextResponse.next();
   const url = req.nextUrl.clone();
-  url.pathname = "/dang-nhap";
-  url.search = `?next=${encodeURIComponent(req.nextUrl.pathname + req.nextUrl.search)}`;
+  // Người nhà vào lại bằng thông tin ở /nguoi-nha; nhân viên đăng nhập ở /dang-nhap
+  url.pathname = loginPathFor(req.nextUrl.pathname);
+  url.search =
+    url.pathname === "/dang-nhap"
+      ? `?next=${encodeURIComponent(req.nextUrl.pathname + req.nextUrl.search)}`
+      : "";
   return NextResponse.redirect(url);
 }
 
@@ -16,7 +21,6 @@ export const config = {
     "/theo-doi/:path*",
     "/thong-bao",
     "/cai-dat",
-    "/lien-ket",
     "/staff/:path*",
     "/admin/:path*",
   ],

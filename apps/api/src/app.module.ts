@@ -10,6 +10,7 @@ import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 import { validateEnv } from './config/env.validation';
 import { DevicesModule } from './devices/devices.module';
 import { EventsModule } from './events/events.module';
+import { FamilyModule } from './family/family.module';
 import { HealthModule } from './health/health.module';
 import { LinksModule } from './links/links.module';
 import { MyModule } from './my/my.module';
@@ -20,7 +21,6 @@ import { PushModule } from './push/push.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { StatusesModule } from './statuses/statuses.module';
 import { SurgeriesModule } from './surgeries/surgeries.module';
-import { TrackingCodesModule } from './tracking-codes/tracking-codes.module';
 
 const DEFAULT_RATE_LIMIT = 300;
 const RATE_WINDOW_MS = 60_000;
@@ -46,7 +46,7 @@ const RATE_WINDOW_MS = 60_000;
     RoomsModule,
     PatientsModule,
     SurgeriesModule,
-    TrackingCodesModule,
+    FamilyModule,
     LinksModule,
     MyModule,
     DevicesModule,

@@ -5,8 +5,8 @@
 
 | File | Nội dung |
 |---|---|
-| `01-luong-chinh.spec.ts` | Luồng trình diễn: tạo ca → cấp mã QR → người nhà đăng ký, liên kết → đổi trạng thái → realtime → đổi lịch → hủy liên kết |
-| `02-loi-va-phien.spec.ts` | Sai mật khẩu, mã thu hồi, khóa sau 5 lần sai, chuyển hướng theo vai trò, hết phiên khi mở QR, tự đăng xuất sau 30 phút |
+| `01-luong-chinh.spec.ts` | Luồng trình diễn: tạo ca → đăng ký người nhà → người nhà vào xem bằng SĐT + họ tên + tên bệnh nhân → đổi trạng thái → realtime → đổi lịch → gỡ quyền |
+| `02-loi-va-phien.spec.ts` | Sai mật khẩu nhân viên, gõ không dấu, sai tên bệnh nhân, khóa sau 5 lần sai, người nhà không dùng được trang đăng nhập nhân viên, tự đăng xuất sau 30 phút |
 | `03-quan-tri.spec.ts` | Tạo/khóa tài khoản, danh mục, nhật ký truy cập |
 | `04-man-hinh-demo.spec.ts` | Ảnh các màn hình chính với dữ liệu demo (cho báo cáo, slide) |
 | `05-ket-qua-tu-dong.spec.ts` | Ảnh kết quả Jest, coverage, k6 dựng từ file kết quả thật |
@@ -16,11 +16,11 @@
 1. Dựng stack demo sạch (cổng 8081, CSDL riêng) và nạp dữ liệu demo:
 
 ```bash
-HTTP_PORT=8081 docker compose -p pt-demo -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+HTTP_PORT=8081 BACKUP_PREFIX=pt_demo docker compose -p pt-demo -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 ```
 
 ```bash
-HTTP_PORT=8081 docker compose -p pt-demo -f deploy/docker-compose.yml --env-file deploy/.env exec api sh -c "npx prisma db seed && npx ts-node prisma/seed-demo.ts"
+HTTP_PORT=8081 BACKUP_PREFIX=pt_demo docker compose -p pt-demo -f deploy/docker-compose.yml --env-file deploy/.env exec api sh -c "npx prisma db seed && npx ts-node prisma/seed-demo.ts"
 ```
 
 2. (Tuỳ chọn, cho `05-ket-qua-tu-dong`) xuất kết quả Jest và coverage:

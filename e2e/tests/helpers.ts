@@ -3,9 +3,10 @@ import path from 'node:path';
 
 export const EVIDENCE_DIR = path.resolve(__dirname, '../../docs/kiem-thu/anh');
 export const MOBILE = { width: 390, height: 844 };
-export const STAFF = 'staff@example.com';
-export const ADMIN = 'admin@example.com';
-export const FAMILY = 'family@example.com';
+export const STAFF = 'nhanvien1@benhvien.test';
+export const ADMIN = 'admin@benhvien.test';
+// Người nhà demo do seed-demo đăng ký sẵn (không có mật khẩu)
+export const DEMO_FAMILY = { phone: '0901234567', fullName: 'Nguyễn Thị Mai', patientName: 'Nguyễn Văn An' };
 
 // Thông báo lỗi của ứng dụng (Next.js có sẵn một role=alert ẩn để đọc màn hình)
 export function appAlert(page: Page) {
@@ -27,7 +28,7 @@ export async function evidence(page: Page, name: string): Promise<void> {
 
 export async function login(page: Page, identifier: string, password = seedPassword()): Promise<void> {
   await page.goto('/dang-nhap');
-  await page.getByLabel('Email hoặc số điện thoại').fill(identifier);
+  await page.getByLabel('Email').fill(identifier);
   await page.getByLabel('Mật khẩu').fill(password);
   await page.getByRole('button', { name: 'Đăng nhập' }).click();
   await expect(page).not.toHaveURL(/dang-nhap/);
@@ -44,15 +45,18 @@ export function unique(prefix: string): string {
   return `${prefix}${Date.now().toString().slice(-6)}${counter}`;
 }
 
-// Đăng ký người nhà mới qua giao diện, trả về số điện thoại dùng đăng nhập
-export async function registerFamily(page: Page, fullName: string, next?: string): Promise<string> {
-  const phone = `09${Date.now().toString().slice(-8)}`;
-  await page.goto(next ? `/dang-ky?next=${encodeURIComponent(next)}` : '/dang-ky');
-  await page.getByLabel('Họ tên').fill(fullName);
-  await page.getByLabel('Số điện thoại hoặc email').fill(phone);
-  await page.getByLabel('Mật khẩu (tối thiểu 8 ký tự)').fill('NguoiNha@2026');
-  await page.getByLabel('Nhập lại mật khẩu').fill('NguoiNha@2026');
-  await page.getByRole('button', { name: 'Đăng ký' }).click();
-  await expect(page).not.toHaveURL(/dang-ky/);
-  return phone;
+export function uniquePhone(): string {
+  return '09' + Date.now().toString().slice(-8);
+}
+
+// Người nhà vào xem: SĐT + họ tên mình + họ tên bệnh nhân
+export async function familyEnter(
+  page: Page,
+  info: { phone: string; fullName: string; patientName: string },
+): Promise<void> {
+  await page.goto('/nguoi-nha');
+  await page.getByLabel('Số điện thoại của bạn').fill(info.phone);
+  await page.getByLabel('Họ tên của bạn').fill(info.fullName);
+  await page.getByLabel('Họ tên bệnh nhân').fill(info.patientName);
+  await page.getByRole('button', { name: 'Xem tình trạng bệnh nhân' }).click();
 }

@@ -1,80 +1,51 @@
 import { expect, test } from '@playwright/test';
-import { appAlert, evidence, FAMILY, login, mobilePage, registerFamily, seedPassword, STAFF, unique } from './helpers';
+import { appAlert, DEMO_FAMILY, evidence, familyEnter, login, mobilePage, STAFF, unique } from './helpers';
 
 test.describe.serial('Trường hợp lỗi và bảo vệ phiên', () => {
-  test('TC-12: đăng nhập sai mật khẩu báo lỗi rõ ràng', async ({ page }) => {
+  test('TC-12: nhân viên đăng nhập sai mật khẩu báo lỗi rõ ràng', async ({ page }) => {
     await page.goto('/dang-nhap');
-    await page.getByLabel('Email hoặc số điện thoại').fill(STAFF);
+    await page.getByLabel('Email').fill(STAFF);
     await page.getByLabel('Mật khẩu').fill('sai-mat-khau');
     await page.getByRole('button', { name: 'Đăng nhập' }).click();
     await expect(appAlert(page)).toHaveText(/Sai email\/số điện thoại hoặc mật khẩu/);
     await evidence(page, 'TC-12');
   });
 
-  test('TC-04: mã đã thu hồi không liên kết được', async ({ browser, page }) => {
-    await login(page, STAFF);
-    await page.goto('/staff');
-    await page.getByRole('link', { name: /DEMO-004/ }).click();
-    await page.getByRole('button', { name: 'Cấp mã theo dõi mới' }).click();
-    const code = (await page.locator('span.font-mono.text-3xl').textContent()) ?? '';
-    page.once('dialog', (d) => void d.accept());
-    await page.getByRole('button', { name: 'Thu hồi' }).first().click();
-    await expect(page.getByText(/Đã thu hồi/).first()).toBeVisible();
-    await evidence(page, 'TC-04a-thu-hoi-ma');
-
+  test('người nhà gõ không dấu, viết hoa thường lẫn lộn vẫn vào được', async ({ browser }) => {
     const family = await mobilePage(browser);
-    await registerFamily(family, 'Đỗ Thị Mai');
-    await family.goto(`/lien-ket?code=${code}`);
-    await family.getByRole('button', { name: 'Theo dõi bệnh nhân' }).click();
-    await expect(appAlert(family)).toHaveText(/không còn hiệu lực/);
+    await familyEnter(family, { phone: '0901 234 567', fullName: 'nguyen thi MAI', patientName: 'nguyen van an' });
+    await expect(family).toHaveURL(/\/theo-doi$/);
+    await expect(family.getByText('N. V. An')).toBeVisible();
+    await evidence(family, 'TC-03b-khong-dau');
+  });
+
+  test('TC-04: sai tên bệnh nhân thì không vào được', async ({ browser }) => {
+    const family = await mobilePage(browser);
+    await familyEnter(family, { ...DEMO_FAMILY, patientName: 'Nguyễn Văn Anh' });
+    await expect(appAlert(family)).toHaveText(/chưa khớp với đăng ký của bệnh viện/);
     await evidence(family, 'TC-04');
   });
 
-  test('TC-05: nhập sai mã 5 lần thì bị tạm khóa', async ({ browser }) => {
+  test('TC-05: nhập sai 5 lần thì bị tạm khóa', async ({ browser }) => {
     const family = await mobilePage(browser);
-    await registerFamily(family, 'Bùi Văn Nam');
-    await family.goto('/lien-ket');
-    const input = family.getByLabel('Mã theo dõi (8 ký tự)');
+    const phone = '09' + Date.now().toString().slice(-8);
     for (let i = 0; i < 6; i += 1) {
-      await input.fill(`AAAA-AA${'BCDEFGH'[i]}${'K'}`);
-      await family.getByRole('button', { name: 'Theo dõi bệnh nhân' }).click();
+      await familyEnter(family, { phone, fullName: 'Người Lạ', patientName: `Bệnh Nhân ${i}` });
       await expect(appAlert(family)).toBeVisible();
     }
     await expect(appAlert(family)).toHaveText(/nhập sai quá nhiều lần/);
     await evidence(family, 'TC-05');
   });
 
-  test('TC-40: người nhà đăng nhập với link của nhân viên → về trang của mình', async ({ browser }) => {
+  test('TC-40: người nhà không dùng được trang đăng nhập nhân viên', async ({ browser }) => {
     const family = await mobilePage(browser);
-    await family.goto('/dang-nhap?next=%2Fstaff');
-    await family.getByLabel('Email hoặc số điện thoại').fill(FAMILY);
-    await family.getByLabel('Mật khẩu').fill(seedPassword());
+    await family.goto('/dang-nhap');
+    await family.getByLabel('Email').fill(DEMO_FAMILY.phone);
+    await family.getByLabel('Mật khẩu').fill('bat-ky');
     await family.getByRole('button', { name: 'Đăng nhập' }).click();
-    await expect(family).toHaveURL(/\/theo-doi$/);
-    await expect(family.getByText('Bệnh nhân đang theo dõi')).toBeVisible();
+    await expect(appAlert(family)).toBeVisible();
+    await expect(family.getByRole('link', { name: 'Vào xem bằng số điện thoại' })).toBeVisible();
     await evidence(family, 'TC-40');
-  });
-
-  test('TC-39: phiên bị thu hồi khi đang mở link QR → đăng nhập lại giữ nguyên mã', async ({ browser, request }) => {
-    const family = await mobilePage(browser);
-    const phone = await registerFamily(family, 'Ngô Thị Lan');
-    // Đổi mật khẩu từ "thiết bị khác" → phiên trên điện thoại bị thu hồi
-    const token = (await (await request.post('/api/auth/login', { data: { identifier: phone, password: 'NguoiNha@2026' } })).json()).accessToken as string;
-    const changed = await request.put('/api/auth/password', {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { currentPassword: 'NguoiNha@2026', newPassword: 'MatKhauMoi@2026' },
-    });
-    expect(changed.ok()).toBeTruthy();
-    const code = 'ABCD-EFGH';
-    await family.goto(`/lien-ket?code=${code}`);
-    await family.getByRole('button', { name: 'Theo dõi bệnh nhân' }).click();
-    await expect(family).toHaveURL(/dang-nhap\?next=%2Flien-ket%3Fcode%3DABCD-EFGH/);
-    await evidence(family, 'TC-39a-het-phien');
-    await family.getByLabel('Email hoặc số điện thoại').fill(phone);
-    await family.getByLabel('Mật khẩu').fill('MatKhauMoi@2026');
-    await family.getByRole('button', { name: 'Đăng nhập' }).click();
-    await expect(family.getByLabel('Mã theo dõi (8 ký tự)')).toHaveValue(code);
-    await evidence(family, 'TC-39');
   });
 
   test('TC-41: nhân viên không thao tác 30 phút thì tự đăng xuất', async ({ page }) => {
@@ -89,8 +60,10 @@ test.describe.serial('Trường hợp lỗi và bảo vệ phiên', () => {
     expect(me.status()).toBe(401);
   });
 
-  test('TC-14: trang nội bộ yêu cầu đăng nhập', async ({ page }) => {
+  test('TC-14: trang nội bộ yêu cầu đăng nhập; trang người nhà dẫn về /nguoi-nha', async ({ page }) => {
     await page.goto(`/staff?x=${unique('')}`);
     await expect(page).toHaveURL(/dang-nhap\?next=/);
+    await page.goto('/theo-doi');
+    await expect(page).toHaveURL(/\/nguoi-nha$/);
   });
 });

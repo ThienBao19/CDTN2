@@ -1,5 +1,5 @@
 import {
-  ConflictException,
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -13,7 +13,6 @@ import { JwtPayload } from '../common/types/auth-user';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 
 export type PublicUser = Pick<
   User,
@@ -54,30 +53,6 @@ export class AuthService {
     return this.jwt.signAsync(payload);
   }
 
-  // Đăng ký công khai chỉ tạo tài khoản người nhà; nhân viên do quản trị tạo
-  async register(dto: RegisterDto): Promise<PublicUser> {
-    const email = dto.email?.trim().toLowerCase();
-    const phone = dto.phone?.trim();
-    const existing = await this.prisma.user.findFirst({
-      where: {
-        OR: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
-      },
-    });
-    if (existing) {
-      throw new ConflictException('Email hoặc số điện thoại đã được sử dụng');
-    }
-    const user = await this.prisma.user.create({
-      data: {
-        fullName: dto.fullName.trim(),
-        email,
-        phone,
-        passwordHash: await argon2.hash(dto.password),
-        role: Role.FAMILY,
-      },
-    });
-    return toPublicUser(user);
-  }
-
   async login(
     dto: LoginDto,
     ipAddress?: string,
@@ -85,8 +60,12 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: normalizeIdentifier(dto.identifier),
     });
+    // Chỉ nhân viên và quản trị viên đăng nhập bằng mật khẩu; người nhà dùng /auth/family-access
     const isValid =
-      user !== null && (await argon2.verify(user.passwordHash, dto.password));
+      user !== null &&
+      user.role !== Role.FAMILY &&
+      user.passwordHash !== null &&
+      (await argon2.verify(user.passwordHash, dto.password));
     // NFR-10: ghi lại cả đăng nhập sai để phát hiện dò mật khẩu
     await this.audit.log({
       userId: user?.id,
@@ -115,6 +94,9 @@ export class AuthService {
   ): Promise<string> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('Không tìm thấy tài khoản');
+    if (!user.passwordHash) {
+      throw new BadRequestException('Tài khoản người nhà không dùng mật khẩu');
+    }
     const isValid = await argon2.verify(user.passwordHash, dto.currentPassword);
     if (!isValid)
       throw new UnauthorizedException('Mật khẩu hiện tại không đúng');

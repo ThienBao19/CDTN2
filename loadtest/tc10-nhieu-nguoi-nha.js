@@ -7,11 +7,11 @@ import { Trend } from 'k6/metrics';
 
 const BASE = __ENV.BASE_URL || 'http://localhost:3000';
 const FAMILIES = Number(__ENV.FAMILIES || 100);
-const STAFF_EMAIL = __ENV.STAFF_EMAIL || 'staff@example.com';
+const STAFF_EMAIL = __ENV.STAFF_EMAIL || 'nhanvien1@benhvien.test';
 const STAFF_PASSWORD = __ENV.STAFF_PASSWORD;
 const STEPS = ['PREPARING', 'IN_SURGERY', 'RECOVERING', 'COMPLETED'];
 const STEP_GAP_S = 8;
-const FAMILY_PASSWORD = 'TaiThu@2026';
+const PATIENT_NAME = 'Bệnh nhân Tải Thử';
 
 // Thời gian từ lúc thông báo được tạo tới lúc người nhà thấy (giới hạn trên, poll 1 giây)
 const notifyVisible = new Trend('notify_visible_ms', true);
@@ -81,13 +81,13 @@ export function setup() {
   }, staff, 'setup'), 201, 'Tạo ca').json('id');
 
   const families = [];
+  // Nhân viên đăng ký từng người nhà (SĐT + họ tên); người nhà vào xem bằng 3 thông tin, không mật khẩu
+  const phonePrefix = String(run).slice(-4);
   for (let i = 0; i < FAMILIES; i += 1) {
-    const email = `taithu-${run}-${i}@example.com`;
-    must(post('/auth/register', { fullName: `Người nhà ${i}`, email, password: FAMILY_PASSWORD }, null, 'setup'), 201, 'Đăng ký');
-    const token = login(email, FAMILY_PASSWORD);
-    const code = must(post(`/surgeries/${surgeryId}/tracking-codes`, {}, staff, 'setup'), 201, 'Cấp mã').json('code');
-    must(post('/links', { code }, token, 'setup'), 201, 'Liên kết');
-    families.push(token);
+    const contact = { phone: `09${phonePrefix}${String(i).padStart(4, '0')}`, fullName: `Người Nhà ${i}` };
+    must(post(`/surgeries/${surgeryId}/family-contacts`, contact, staff, 'setup'), 201, 'Đăng ký người nhà');
+    const res = post('/auth/family-access', { ...contact, patientName: PATIENT_NAME }, null, 'setup');
+    families.push(must(res, 200, 'Người nhà vào xem').json('accessToken'));
   }
   return { staff, surgeryId, families };
 }

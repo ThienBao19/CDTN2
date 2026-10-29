@@ -40,15 +40,14 @@ export type HistoryEntry = {
   updatedBy?: { fullName: string };
 };
 
-export type TrackingCodeView = {
+export type FamilyContact = {
   id: string;
-  status: "PENDING" | "USED" | "REVOKED" | "EXPIRED";
-  expiresAt: string;
-  createdAt: string;
-  createdBy: string;
+  phone: string;
+  fullName: string;
+  status: "ACTIVE" | "REVOKED";
+  linkedAt: string;
+  addedBy: string | null;
 };
-
-export type IssuedCode = { id: string; code: string; expiresAt: string };
 
 export type FamilySurgery = {
   linkId: string;
