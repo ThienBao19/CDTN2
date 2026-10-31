@@ -46,10 +46,8 @@ async function messaging() {
   return getMessaging(initializeApp(config));
 }
 
-// Xin quyền, lấy token FCM và đăng ký với máy chủ (POST /devices)
-export async function enablePush(): Promise<void> {
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") throw new Error("Bạn chưa cho phép hiển thị thông báo");
+// Lấy token FCM và đăng ký với máy chủ (POST /devices) cho người đang đăng nhập
+async function registerToken(): Promise<void> {
   const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
   const token = await getToken(await messaging(), {
     vapidKey: VAPID_KEY,
@@ -57,6 +55,19 @@ export async function enablePush(): Promise<void> {
   });
   await api.post("/devices", { token, platform: "WEB" });
   writeToken(token);
+}
+
+export async function enablePush(): Promise<void> {
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") throw new Error("Bạn chưa cho phép hiển thị thông báo");
+  await registerToken();
+}
+
+// Mở app: thiết bị đã bật thông báo thì đăng ký lại token cho người đang đăng nhập,
+// để khi một người nhà khác vào xem trên cùng điện thoại, push chuyển sang người đó
+export async function syncPush(): Promise<void> {
+  if (!isPushEnabled() || !isPushConfigured()) return;
+  await registerToken();
 }
 
 export async function disablePush(): Promise<void> {

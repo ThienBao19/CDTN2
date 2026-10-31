@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 import { playStageSound, startRinging, stopRinging, unlockSound } from "@/lib/alert-sound";
+import { syncPush } from "@/lib/push";
 import { useEvents, type AppEvent } from "@/lib/use-events";
 
 // Âm báo khi app đang mở: xong một giai đoạn kêu "ting",
@@ -66,6 +67,9 @@ export function AlarmDialog({ onDismiss }: { onDismiss: () => void }) {
 // Gắn ở layout người nhà: nghe sự kiện trên mọi trang (danh sách, chi tiết ca, thông báo)
 export function FamilyAlerts() {
   const alarm = useStatusAlarm();
+  useEffect(() => {
+    syncPush().catch((error: unknown) => console.warn("Không đăng ký lại được thông báo đẩy", error));
+  }, []);
   useEvents(alarm.handle);
   return alarm.isRinging ? <AlarmDialog onDismiss={alarm.dismiss} /> : null;
 }

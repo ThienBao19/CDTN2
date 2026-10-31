@@ -127,6 +127,30 @@ describe('Thông báo (e2e) — FR-09, BR-05, TC-09', () => {
     expect(await prisma.deviceToken.count({ where: { token } })).toBe(0);
   });
 
+  it('TC-55: moves the device token to the family member now using the phone', async () => {
+    const token = `shared-phone-${Date.now()}`;
+    const first = await linkNewFamily(
+      app,
+      staff,
+      await createSurgery(app, staff),
+    );
+    await api(app, first)
+      .post('/devices')
+      .send({ token, platform: 'WEB' })
+      .expect(204);
+    const surgeryId = await createSurgery(app, staff);
+    const second = await linkNewFamily(app, staff, surgeryId);
+    // Người thứ hai mở app trên cùng điện thoại: app đăng ký lại token
+    await api(app, second)
+      .post('/devices')
+      .send({ token, platform: 'WEB' })
+      .expect(204);
+    const me = await api(app, second).get('/auth/me').expect(200);
+    const device = await prisma.deviceToken.findUnique({ where: { token } });
+    expect(device?.userId).toBe((me.body as { id: string }).id);
+    expect(await prisma.deviceToken.count({ where: { token } })).toBe(1);
+  });
+
   it('forbids staff from registering family devices', async () => {
     await api(app, staff)
       .post('/devices')
