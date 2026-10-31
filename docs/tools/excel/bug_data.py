@@ -71,4 +71,7 @@ BUGS = BUGS[:15] + [
     ("BUG-17", "TC-52", "Người nhà mở lại app (PWA trên iPhone) thì phải nhập lại thông tin dù phiên 7 ngày vẫn còn — ảnh anh/BUG-17-mo-lai-app-mat-phien.png",
      "Thêm app vào màn hình chính → vào xem → đóng app → mở lại: hiện trang chủ/form nhập thông tin", "Cao", FIXED, W, "29/10/2026", "29/10/2026",
      "Trang chủ và /nguoi-nha kiểm tra phiên (GET /auth/me) rồi chuyển thẳng tới trang theo dõi; cookie phiên đổi SameSite=Strict → Lax để vẫn được gửi khi mở app từ màn hình chính hoặc bấm vào thông báo — người dùng phát hiện khi thử trên điện thoại"),
+    ("BUG-18", "TC-55", "Người nhà thứ hai vào xem trên điện thoại đã bật thông báo thì không nhận push (bị ghi SKIPPED)",
+     "Bật thông báo khi vào bằng người nhà A → vào bằng người nhà B trên cùng máy → đổi trạng thái ca của B", "Cao", FIXED, W, "31/10/2026", "31/10/2026",
+     "Token thiết bị vẫn gắn với A vì nút Cài đặt hiện 'đang bật' nên không đăng ký lại; nay mỗi lần mở app tự đăng ký lại token cho người đang vào xem — người dùng phát hiện khi thử trên điện thoại"),
 ] + BUGS[15:]

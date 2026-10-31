@@ -2,7 +2,7 @@ const { h2, p, bullets, tbl } = require('./lib');
 
 module.exports = () => [
   h2('6.5. Lỗi phát hiện và xử lý'),
-  p('Trong quá trình kiểm thử, nhóm ghi nhận 17 lỗi vào Bug log; tất cả đã được sửa và có test hồi quy.'),
+  p('Trong quá trình kiểm thử, nhóm ghi nhận 18 lỗi vào Bug log; tất cả đã được sửa và có test hồi quy.'),
   ...tbl('Lỗi đã phát hiện và sửa', ['Mã', 'Lỗi', 'Mức độ', 'Phát hiện nhờ'], [
     ['BUG-01', 'Giới hạn đăng nhập né được bằng X-Forwarded-For giả', 'Cao', 'Rà soát bảo mật'],
     ['BUG-02', 'Liên kết được với ca đã hoàn tất (nay: không đăng ký người nhà cho ca đã kết thúc)', 'Cao', 'Đối chiếu mục 7 tài liệu'],
@@ -21,6 +21,7 @@ module.exports = () => [
     ['BUG-15', '“Cập nhật lúc” lấy sai thời điểm', 'Thấp', 'Xem ảnh minh chứng'],
     ['BUG-16', 'Sao lưu báo thành công dù pg_dump lỗi', 'Trung bình', 'Chụp minh chứng sao lưu'],
     ['BUG-17', 'Người nhà thoát app rồi mở lại từ màn hình chính bị bắt nhập lại thông tin', 'Cao', 'Thử trên iPhone thật'],
+    ['BUG-18', 'Người nhà thứ hai trên cùng điện thoại không nhận thông báo đẩy', 'Cao', 'Thử trên iPhone thật'],
   ], [1.2, 5.2, 1.6, 2.6]),
   p('Phân tích: phần lớn lỗi nghiêm trọng không nằm ở luồng chính (đã được kiểm thử kỹ từ Sprint 1) mà ở **ranh giới giữa các thành phần**: giữa web và API (proxy, cookie, địa chỉ IP), giữa ứng dụng và môi trường triển khai (Docker, sao lưu). Các lỗi này chỉ lộ ra khi chạy hệ thống như thật: thử tải, triển khai Docker và thử khôi phục dữ liệu. Đây là bài học chính của nhóm về kiểm thử.'),
   h2('6.6. Hạn chế đã biết'),

@@ -44,7 +44,7 @@ FILES = sorted(os.listdir(ANH)) if os.path.isdir(ANH) else []
 
 # Ảnh minh chứng: ảnh giao diện theo mã TC; TC chỉ kiểm bằng test tự động dùng ảnh kết quả chạy test
 # Ngày test của các test case thêm sau đợt đầu
-TEST_DATES = {"TC-31": "29/10/2026", "TC-52": "29/10/2026", "TC-53": "29/10/2026", "TC-54": "29/10/2026"}
+TEST_DATES = {"TC-31": "29/10/2026", "TC-52": "29/10/2026", "TC-53": "29/10/2026", "TC-54": "29/10/2026", "TC-55": "31/10/2026"}
 
 
 def evidence_for(code, kind, is_done):

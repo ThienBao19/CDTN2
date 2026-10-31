@@ -35,6 +35,7 @@ EXTRA2 = [
   ("TC-52", "FR-02", "Mở lại app khi phiên người nhà còn hạn", "Người nhà vào xem → đóng app → mở lại từ màn hình chính (trang chủ, /nguoi-nha)", "Vào thẳng màn hình theo dõi, không phải nhập lại thông tin", "UI (Playwright)", UI7 + " › TC-52", "Chuyển thẳng tới /theo-doi; cookie phiên SameSite=Lax 7 ngày (sửa BUG-17)", OK),
   ("TC-53", "FR-09", "Âm báo khi xong một giai đoạn", "App người nhà đang mở → nhân viên chuyển 'Đã tiếp nhận' → 'Đang chuẩn bị'", "Kêu một âm báo ngắn và rung nhẹ, không hiện chuông", "UI (Playwright) + Unit", UI7 + " › TC-53; notifications.service.spec.ts", "2 nốt âm báo + 1 lần rung; thông báo đẩy mang alert=stage", OK),
   ("TC-54", "FR-09", "Chuông reo khi ca kết thúc", "App người nhà đang mở → nhân viên chuyển ca tới 'Đã hoàn tất' → bấm 'Tắt chuông'", "Chuông reo và rung lặp lại tới khi người nhà bấm tắt", "UI (Playwright) + Unit", UI7 + " › TC-54", "Hiện bảng 'Ca phẫu thuật đã hoàn tất', chuông lặp mỗi 1,6 giây, dừng hẳn sau khi bấm tắt; push alert=final giữ thông báo trên màn hình (requireInteraction)", OK),
+  ("TC-55", "FR-09", "Đổi người nhà trên cùng điện thoại vẫn nhận push", "Điện thoại đã bật thông báo cho người nhà A → người nhà B vào xem trên cùng máy → nhân viên đổi trạng thái ca của B, tắt màn hình", "Thông báo của B hiện trên màn hình khóa", "API e2e + Thủ công", "test/notifications.e2e-spec.ts › TC-55", "Mở app thì token chuyển sang B; 4 thông báo ca thử 31/10 đều SENT tới iPhone", OK),
 ]
 
 SHARED_V2 = {

@@ -7,7 +7,7 @@ module.exports = () => [
     'Hoàn thành 13/14 yêu cầu chức năng (toàn bộ yêu cầu ưu tiên Cao và Trung bình); FR-14 (SMS) thuộc hướng mở rộng.',
     'Chạy trọn vẹn buổi trình diễn theo tiêu chí MVP: tạo ca, đăng ký người nhà, người nhà vào xem, đổi đủ 5 trạng thái, người nhà nhận cập nhật ở mỗi bước.',
     'Đạt các chỉ tiêu hiệu năng: thông báo tới người nhà p95 1,04 s và màn hình trạng thái p95 79 ms với 500 người nhà cùng theo dõi, không request nào lỗi.',
-    '111 test tự động (coverage 94% statements) và 22 kịch bản giao diện; 54/54 test case đạt, 17 lỗi phát hiện đều đã sửa.',
+    '112 test tự động (coverage 94% statements) và 22 kịch bản giao diện; 55/55 test case đạt, 18 lỗi phát hiện đều đã sửa.',
     'Đóng gói triển khai bằng Docker kèm nginx và sao lưu tự động, chạy được trên máy bất kỳ.',
   ]),
   h2('8.2. Hạn chế'),
