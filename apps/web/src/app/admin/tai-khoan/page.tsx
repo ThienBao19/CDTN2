@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AdminNav } from "@/components/admin-nav";
 import { AppHeader } from "@/components/app-header";
 import { ErrorText } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
@@ -45,7 +44,7 @@ export default function AccountsPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
       <AppHeader title="Quản lý tài khoản" user={me} />
-      <AdminNav />
+
       <CreateUserForm onCreated={() => void reload()} />
       <div className="flex items-center gap-3">
         <span className="font-medium">Lọc vai trò</span>
