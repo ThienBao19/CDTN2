@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AdminNav } from "@/components/admin-nav";
 import { AppHeader } from "@/components/app-header";
 import { Button, ErrorText } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
@@ -67,7 +66,7 @@ export default function AuditPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
       <AppHeader title="Nhật ký truy cập" user={me} />
-      <AdminNav />
+
       <div className="flex flex-wrap items-end gap-3">
         <select value={userId} onChange={(e) => onFilter(setUserId)(e.target.value)} className={SELECT} aria-label="Người dùng">
           <option value="">Mọi người dùng</option>
