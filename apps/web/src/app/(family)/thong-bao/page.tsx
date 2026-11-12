@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
-import { FamilyNav } from "@/components/family-nav";
 import { Button, ErrorText } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
@@ -27,7 +26,6 @@ export default function NotificationsPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <AppHeader title="Thông báo" user={user} />
-      <FamilyNav />
       <ErrorText>{error}</ErrorText>
       {data?.items.length === 0 && <p className="text-muted">Chưa có thông báo nào.</p>}
       {data && data.unreadCount > 0 && (

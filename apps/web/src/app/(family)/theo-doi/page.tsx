@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
-import { FamilyNav } from "@/components/family-nav";
 import { ErrorText } from "@/components/ui";
 import { formatTime } from "@/lib/format";
 import type { FamilySurgery } from "@/lib/types";
@@ -23,7 +22,6 @@ export default function FollowListPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <AppHeader title="Bệnh nhân đang theo dõi" user={user} />
-      <FamilyNav />
       <ErrorText>{error}</ErrorText>
       {items?.length === 0 && (
         <p className="text-muted">
