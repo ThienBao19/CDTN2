@@ -1,7 +1,6 @@
 "use client";
 
 import { AppHeader } from "@/components/app-header";
-import { FamilyNav } from "@/components/family-nav";
 import { Card } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { FamilySurgery } from "@/lib/types";
@@ -24,7 +23,6 @@ export default function SettingsPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <AppHeader title="Cài đặt" user={user} />
-      <FamilyNav />
       <PushToggle />
       <SoundTest />
       <Card className="flex flex-col gap-3">
