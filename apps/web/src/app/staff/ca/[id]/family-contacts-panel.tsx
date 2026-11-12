@@ -44,11 +44,11 @@ export function FamilyContactsPanel({ surgeryId, canAdd }: { surgeryId: string; 
     <Card className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">Người nhà được theo dõi</h2>
       {canAdd && (
-        <form onSubmit={handleAdd} className="grid gap-3 sm:grid-cols-[1fr_1.4fr_auto]">
+                <form onSubmit={handleAdd} className="grid gap-3 sm:grid-cols-2 [&_input]:w-full [&_input]:min-w-0">
           <Field id="contact-phone" name="phone" label="Số điện thoại" type="tel" required />
           <Field id="contact-name" name="fullName" label="Họ tên người nhà" required />
-          <div className="flex items-end">
-            <Button type="submit" variant="secondary" className="w-full">Đăng ký</Button>
+          <div className="sm:col-span-2 sm:flex sm:justify-end">
+            <Button type="submit" variant="secondary" className="w-full sm:w-auto">Đăng ký người nhà</Button>
           </div>
         </form>
       )}
