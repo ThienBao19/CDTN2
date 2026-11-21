@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
@@ -8,13 +9,9 @@ export default function LoginPage() {
       <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-green-100 bg-white shadow-xl lg:grid-cols-2">
         {/* Khu vực giới thiệu */}
         <section className="flex flex-col justify-center bg-[#166534] px-7 py-10 text-white sm:px-10 lg:px-12 lg:py-16">
-          <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 text-4xl">
-            <span aria-hidden="true">✚</span>
+          <div className="mb-8">
+            <BrandLogo size="lg" tone="onDark" subtitle="Nhân viên y tế · Quản trị viên" />
           </div>
-
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-green-100">
-            Hospital Management System
-          </p>
 
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
             Hệ thống quản lý

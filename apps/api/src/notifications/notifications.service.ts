@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PushProvider, PushResult } from '../push/push-provider';
 import { realSleep, Sleep, withRetry } from './retry';
 
-export const NOTIFICATION_TITLE = 'Cập nhật ca phẫu thuật';
+export const NOTIFICATION_TITLE = 'Bệnh Viện Đồng Nai';
 export const SCHEDULE_CHANGED_MESSAGE =
   'Lịch phẫu thuật có thay đổi, vui lòng mở ứng dụng để xem.';
 export const CHANGED_MESSAGE =

@@ -1,6 +1,7 @@
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
 import { sessionHome } from "@/lib/server-session";
 import { FamilyAccessForm } from "./family-access-form";
 
@@ -17,13 +18,9 @@ export default async function FamilyEntryPage() {
       <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-green-100 bg-white shadow-xl">
         {/* Phần giới thiệu */}
         <header className="bg-[#166534] px-6 py-9 text-white sm:px-10">
-          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-3xl">
-            <span aria-hidden="true">♡</span>
+          <div className="mb-6">
+            <BrandLogo size="lg" tone="onDark" subtitle="Cổng thông tin người nhà" />
           </div>
-
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-green-100">
-            Patient Tracking System
-          </p>
 
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
             Theo dõi tình trạng
