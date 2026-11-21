@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 
 const MENU_ITEMS = [
   { href: "/staff", label: "Ca phẫu thuật", icon: "▦" },
@@ -27,10 +28,7 @@ export function StaffSidebar() {
   return (
     <aside className="w-full shrink-0 bg-[#166534] text-white lg:sticky lg:top-0 lg:h-screen lg:w-64">
       <div className="flex items-center justify-between border-b border-white/20 px-5 py-4 lg:block lg:px-6 lg:py-6">
-        <div>
-          <div className="text-xl font-bold">Nhân viên y tế</div>
-          <p className="mt-1 text-sm text-green-100">Cập nhật tình trạng ca mổ</p>
-        </div>
+        <BrandLogo tone="onDark" subtitle="Nhân viên y tế" />
 
         <button
           type="button"
