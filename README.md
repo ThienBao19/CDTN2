@@ -1,4 +1,4 @@
-# Hệ thống Theo dõi và Thông báo tình trạng bệnh nhân
+# Bệnh Viện Đồng Nai — Hệ thống Theo dõi và Thông báo tình trạng bệnh nhân
 
 Đồ án Chuyên đề tốt nghiệp 2 (CNPM, Văn Lang). Người nhà theo dõi ca phẫu thuật trên điện thoại.
 Nhân viên y tế cập nhật trạng thái theo 5 giai đoạn, và hệ thống gửi thông báo đẩy cho người nhà đã liên kết.
