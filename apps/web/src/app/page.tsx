@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
 import { StatusSteps } from "@/components/status-steps";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { fetchHealth } from "@/lib/server-health";
 import { sessionHome } from "@/lib/server-session";
 
@@ -33,7 +35,8 @@ export default async function Home() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Theo dõi tình trạng bệnh nhân</h1>
+        <h1 className="sr-only">{APP_NAME}</h1>
+        <BrandLogo size="lg" subtitle={APP_TAGLINE} />
         <p className="text-muted">
           Người nhà nhận thông báo ngay khi ca phẫu thuật chuyển giai đoạn, không
           cần chờ trước phòng mổ.

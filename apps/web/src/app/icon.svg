@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bệnh Viện Đồng Nai">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22a55a"/>
+      <stop offset="1" stop-color="#14532d"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <!-- Chữ thập y tế -->
+  <rect x="204" y="88" width="104" height="300" rx="26" fill="#ffffff"/>
+  <rect x="92" y="190" width="328" height="104" rx="26" fill="#ffffff"/>
+  <!-- Sông Đồng Nai: dải sóng cắt ngang chân chữ thập -->
+  <path d="M64 384 C 120 344, 176 424, 232 384 S 344 344, 400 384 S 448 404, 460 392" fill="none" stroke="#1a7a43" stroke-width="46" stroke-linecap="round"/>
+  <path d="M64 384 C 120 344, 176 424, 232 384 S 344 344, 400 384 S 448 404, 460 392" fill="none" stroke="#bbf7d0" stroke-width="22" stroke-linecap="round"/>
+</svg>

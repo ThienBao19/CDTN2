@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
+import { APP_NAME, APP_SHORT_NAME, BRAND_GREEN } from "@/lib/brand";
 import "./globals.css";
 
 const beVietnam = Be_Vietnam_Pro({
@@ -9,13 +10,14 @@ const beVietnam = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "Theo dõi bệnh nhân",
+  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
   description: "Người nhà theo dõi tình trạng ca phẫu thuật ngay trên điện thoại",
-  applicationName: "Theo dõi bệnh nhân",
+  applicationName: APP_NAME,
+  appleWebApp: { title: APP_SHORT_NAME, capable: true },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f6cbd",
+  themeColor: BRAND_GREEN,
   width: "device-width",
   initialScale: 1,
 };

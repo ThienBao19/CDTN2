@@ -9,14 +9,14 @@ self.addEventListener("push", (event) => {
   }
   const notification = payload.notification || {};
   const data = payload.data || {};
-  const title = notification.title || "Cập nhật ca phẫu thuật";
+  const title = notification.title || "Bệnh Viện Đồng Nai";
   // Ca kết thúc: thông báo nằm lại tới khi người nhà tắt, rung dài (Android).
   // Xong một giai đoạn: rung ngắn. Âm thanh là âm báo mặc định của điện thoại.
   const isFinal = data.alert === "final";
   event.waitUntil(
     self.registration.showNotification(isFinal ? "Ca phẫu thuật đã hoàn tất" : title, {
       body: notification.body || "",
-      icon: "/icon.svg",
+      icon: "/icon-192.png",
       data: { url: data.url || "/theo-doi" },
       tag: data.surgeryId || undefined,
       renotify: Boolean(data.surgeryId),
