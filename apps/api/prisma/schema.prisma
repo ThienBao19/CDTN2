@@ -110,17 +110,22 @@ model Room {
 }
 
 model Surgery {
-  id              String    @id @default(uuid())
-  patientId       String    @map("patient_id")
-  roomId          String?   @map("room_id")
+  id              String   @id @default(uuid())
+  patientId       String   @map("patient_id")
+  roomId          String?  @map("room_id")
   title           String
-  scheduledAt     DateTime  @map("scheduled_at")
-  currentStatusId Int       @map("current_status_id")
-  cancelledAt     DateTime? @map("cancelled_at")
-  cancelReason    String?   @map("cancel_reason")
-  createdById     String    @map("created_by")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  scheduledAt     DateTime @map("scheduled_at")
+  currentStatusId Int      @map("current_status_id")
+
+  // Thời gian dự kiến riêng của ca (phút).
+  // null = sử dụng thời gian mặc định của giai đoạn hiện tại.
+  expectedMinutes Int? @map("expected_minutes")
+
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?   @map("cancel_reason")
+  createdById  String    @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   patient       Patient          @relation(fields: [patientId], references: [id])
   room          Room?            @relation(fields: [roomId], references: [id])
@@ -145,6 +150,9 @@ model StatusDefinition {
   sortOrder           Int     @map("sort_order")
   notificationMessage String  @map("notification_message")
   isActive            Boolean @default(true) @map("is_active")
+
+  // Thời gian dự kiến mặc định của giai đoạn (phút), do Admin cấu hình.
+  expectedMinutes Int? @map("expected_minutes")
 
   surgeries Surgery[]
   history   StatusHistory[]
