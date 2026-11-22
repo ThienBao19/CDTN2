@@ -10,6 +10,7 @@ const MENU_ITEMS = [
   { href: "/admin", label: "Tổng quan", icon: "▦" },
   { href: "/admin/tai-khoan", label: "Quản lý tài khoản", icon: "♙" },
   { href: "/admin/danh-muc", label: "Phòng & trạng thái", icon: "▤" },
+  { href: "/admin/thong-ke", label: "Thống kê", icon: "▥" },
   { href: "/admin/nhat-ky", label: "Nhật ký truy cập", icon: "◷" },
 ];
 
