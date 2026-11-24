@@ -1,9 +1,25 @@
+
 import { Prisma } from '@prisma/client';
 
 export const SURGERY_INCLUDE = {
   patient: true,
   room: true,
   currentStatus: true,
+
+  // Lấy lần chuyển trạng thái gần nhất để tính
+  // thời gian dự kiến và cảnh báo quá giờ.
+  // ID lịch sử dùng để chống gửi thông báo quá giờ trùng lặp.
+  history: {
+    orderBy: {
+      changedAt: 'desc',
+    },
+    take: 1,
+    select: {
+      id: true,
+      statusId: true,
+      changedAt: true,
+    },
+  },
 } satisfies Prisma.SurgeryInclude;
 
 export type SurgeryWithRelations = Prisma.SurgeryGetPayload<{

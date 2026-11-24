@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { StatusDefinition } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -43,5 +48,45 @@ export class StatusesService {
       },
     });
     return later === 0;
+  }
+
+  // Admin thiết lập thời gian dự kiến mặc định cho từng giai đoạn.
+  // null = chưa cấu hình thời gian dự kiến.
+  async updateExpectedMinutes(
+    statusId: number,
+    expectedMinutes: number | null,
+  ): Promise<StatusDefinition> {
+    if (
+      !Number.isInteger(statusId) ||
+      statusId <= 0
+    ) {
+      throw new BadRequestException('ID trạng thái không hợp lệ');
+    }
+
+    if (
+      expectedMinutes !== null &&
+      (!Number.isSafeInteger(expectedMinutes) || expectedMinutes <= 0 || expectedMinutes > 2147483647)
+    ) {
+      throw new BadRequestException(
+        'Thời gian dự kiến phải là số nguyên dương',
+      );
+    }
+
+    const status = await this.prisma.statusDefinition.findFirst({
+      where: {
+        id: statusId,
+        workflow: SURGERY_WORKFLOW,
+        isActive: true,
+      },
+    });
+
+    if (!status) {
+      throw new NotFoundException('Không tìm thấy trạng thái');
+    }
+
+    return this.prisma.statusDefinition.update({
+      where: { id: status.id },
+      data: { expectedMinutes },
+    });
   }
 }

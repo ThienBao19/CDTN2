@@ -1,3 +1,4 @@
+
 import { Injectable, Logger } from '@nestjs/common';
 import { DeliveryStatus, LinkStatus, Notification } from '@prisma/client';
 import { EventsService, NotifyAlert } from '../events/events.service';
@@ -30,21 +31,50 @@ export class NotificationsService {
 
   // BR-05: chỉ gửi cho người nhà có liên kết còn hiệu lực.
   // Nội dung không có tên hay thông tin y tế (mục 7: thông báo kín đáo).
+  //
+  // overdueStageHistoryId:
+  // - Không truyền: thông báo thông thường.
+  // - Có truyền: thông báo quá giờ của một lần vào giai đoạn.
+  // Mỗi người nhà chỉ nhận một thông báo quá giờ
+  // trong mỗi lần vào giai đoạn.
   async notifySurgery(
     surgeryId: string,
     content: string,
     alert: NotifyAlert = 'info',
+    overdueStageHistoryId?: string,
   ): Promise<Notification[]> {
     this.events.emit({ type: 'surgery.updated', surgeryId });
+
     const links = await this.prisma.familyLink.findMany({
       where: { surgeryId, status: LinkStatus.ACTIVE },
       select: { userId: true },
     });
+
     if (links.length === 0) return [];
 
-    const created = await this.prisma.notification.createManyAndReturn({
-      data: links.map((l) => ({ userId: l.userId, surgeryId, content })),
-    });
+    const created = overdueStageHistoryId
+      ? await this.prisma.notification.createManyAndReturn({
+          data: links.map((l) => ({
+            userId: l.userId,
+            surgeryId,
+            content,
+            overdueStageHistoryId,
+          })),
+          // Ràng buộc UNIQUE trong database ngăn tạo thông báo trùng,
+          // kể cả khi nhiều nhân viên gửi đồng thời.
+          skipDuplicates: true,
+        })
+      : await this.prisma.notification.createManyAndReturn({
+          data: links.map((l) => ({
+            userId: l.userId,
+            surgeryId,
+            content,
+          })),
+        });
+
+    // Không có thông báo mới thì không gửi lại sự kiện hoặc push.
+    if (created.length === 0) return [];
+
     created.forEach((n) =>
       this.events.emit({
         type: 'notification.created',
@@ -53,7 +83,9 @@ export class NotificationsService {
         alert,
       }),
     );
-    // Gửi push nền để không làm chậm thao tác của nhân viên
+
+    // Gửi push nền để không làm chậm thao tác của nhân viên.
+    // Chỉ gửi những thông báo vừa được tạo thành công.
     void Promise.all(created.map((n) => this.deliver(n, alert))).catch(
       (error: unknown) =>
         this.logger.error(
@@ -61,6 +93,7 @@ export class NotificationsService {
           error instanceof Error ? error.stack : error,
         ),
     );
+
     return created;
   }
 
@@ -72,6 +105,7 @@ export class NotificationsService {
       where: { userId: notification.userId },
       select: { token: true },
     });
+
     if (!this.push.isEnabled() || devices.length === 0) {
       return this.finish(notification.id, DeliveryStatus.SKIPPED, 0, null);
     }
@@ -85,7 +119,9 @@ export class NotificationsService {
         alert,
       },
     };
+
     let tokens = devices.map((d) => d.token);
+
     const { result, attempts } = await withRetry<PushResult>(
       async () => {
         const res = await this.safeSend(tokens, message);
@@ -98,7 +134,9 @@ export class NotificationsService {
       RETRY_DELAYS_MS,
       this.sleep,
     );
+
     const isSent = result.successCount > 0;
+
     return this.finish(
       notification.id,
       isSent ? DeliveryStatus.SENT : DeliveryStatus.FAILED,
@@ -121,6 +159,7 @@ export class NotificationsService {
 
   private async removeInvalid(tokens: string[]): Promise<void> {
     if (tokens.length === 0) return;
+
     await this.prisma.deviceToken.deleteMany({
       where: { token: { in: tokens } },
     });
@@ -141,6 +180,7 @@ export class NotificationsService {
         sentAt: status === DeliveryStatus.SENT ? new Date() : null,
       },
     });
+
     return status;
   }
 }

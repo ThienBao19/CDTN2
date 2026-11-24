@@ -1,3 +1,4 @@
+
 import {
   Body,
   ConflictException,
@@ -42,7 +43,10 @@ export class AdminCatalogController {
   }
 
   @Post('rooms')
-  async createRoom(@Body() dto: CreateRoomDto, @CurrentUser() admin: AuthUser) {
+  async createRoom(
+    @Body() dto: CreateRoomDto,
+    @CurrentUser() admin: AuthUser,
+  ) {
     try {
       const room = await this.prisma.room.create({
         data: { ...dto, name: dto.name.trim() },
@@ -69,14 +73,20 @@ export class AdminCatalogController {
   ) {
     const exists = await this.prisma.room.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('Không tìm thấy phòng');
+
     try {
-      const room = await this.prisma.room.update({ where: { id }, data: dto });
+      const room = await this.prisma.room.update({
+        where: { id },
+        data: dto,
+      });
+
       await this.audit.log({
         userId: admin.id,
         action: 'UPDATE',
         entityType: 'room',
         entityId: id,
       });
+
       return room;
     } catch (error) {
       if (isUniqueViolation(error))
@@ -99,20 +109,37 @@ export class AdminCatalogController {
     @Body() dto: UpdateStatusDto,
     @CurrentUser() admin: AuthUser,
   ) {
-    const exists = await this.prisma.statusDefinition.findUnique({
-      where: { id },
+    // Chỉ cho phép cập nhật trạng thái thuộc quy trình phẫu thuật.
+    const exists = await this.prisma.statusDefinition.findFirst({
+      where: {
+        id,
+        workflow: SURGERY_WORKFLOW,
+      },
     });
-    if (!exists) throw new NotFoundException('Không tìm thấy trạng thái');
+
+    if (!exists) {
+      throw new NotFoundException(
+        'Không tìm thấy trạng thái thuộc quy trình phẫu thuật',
+      );
+    }
+
+    // Cập nhật các trường được phép, bao gồm expectedMinutes.
+    // Điều kiện workflow cũng được kiểm tra trong thao tác cập nhật.
     const status = await this.prisma.statusDefinition.update({
-      where: { id },
+      where: {
+        id,
+        workflow: SURGERY_WORKFLOW,
+      },
       data: dto,
     });
+
     await this.audit.log({
       userId: admin.id,
       action: 'UPDATE',
       entityType: 'status',
       entityId: String(id),
     });
+
     return status;
   }
 }
