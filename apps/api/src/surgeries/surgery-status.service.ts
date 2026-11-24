@@ -1,3 +1,4 @@
+
 import {
   BadRequestException,
   ConflictException,
@@ -36,31 +37,47 @@ export class SurgeryStatusService {
     user: AuthUser,
   ): Promise<SurgeryWithRelations> {
     const surgery = await this.surgeries.findOne(surgeryId);
-    if (surgery.cancelledAt) throw new ConflictException('Ca đã bị hủy');
+
+    if (surgery.cancelledAt) {
+      throw new ConflictException('Ca đã bị hủy');
+    }
 
     const target = await this.statuses.findByCode(dto.statusCode);
+
     const result = evaluateTransition({
       currentOrder: surgery.currentStatus.sortOrder,
       targetOrder: target.sortOrder,
       override: dto.override ?? false,
       reason: dto.note,
     });
+
     if (!result.ok) {
       const message = TRANSITION_ERRORS[result.error];
       throw new BadRequestException(message);
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      // Chỉ cập nhật nếu trạng thái chưa bị người khác đổi trong lúc đó
+      // Chỉ cập nhật nếu trạng thái chưa bị người khác đổi trong lúc đó.
+      // Khi chuyển giai đoạn, xóa thời gian dự kiến riêng của giai đoạn cũ.
       const { count } = await tx.surgery.updateMany({
-        where: { id: surgeryId, currentStatusId: surgery.currentStatusId },
-        data: { currentStatusId: target.id },
+        where: {
+          id: surgeryId,
+          currentStatusId: surgery.currentStatusId,
+          cancelledAt: null,
+        },
+        data: {
+          currentStatusId: target.id,
+          expectedMinutes: null,
+        },
       });
+
       if (count === 0) {
         throw new ConflictException(
-          'Trạng thái vừa được người khác cập nhật, vui lòng tải lại',
+          'Ca vừa được người khác cập nhật hoặc đã bị hủy, vui lòng tải lại',
         );
       }
+
+      // Ghi thời điểm bắt đầu giai đoạn mới.
       await tx.statusHistory.create({
         data: {
           surgeryId,
@@ -70,6 +87,7 @@ export class SurgeryStatusService {
           isOverride: result.isOverride,
         },
       });
+
       return tx.surgery.findUniqueOrThrow({
         where: { id: surgeryId },
         include: SURGERY_INCLUDE,
@@ -82,13 +100,17 @@ export class SurgeryStatusService {
       entityType: 'surgery',
       entityId: surgeryId,
     });
-    // FR-09: lưu thông báo, đẩy realtime và gửi push cho người nhà đã liên kết
+
+    // FR-09: lưu thông báo, đẩy realtime và gửi push
+    // cho người nhà đã liên kết.
     const isFinal = await this.statuses.isFinal(target);
+
     await this.notifications.notifySurgery(
       surgeryId,
       target.notificationMessage,
       isFinal ? 'final' : 'stage',
     );
+
     return updated;
   }
 
@@ -98,7 +120,12 @@ export class SurgeryStatusService {
       orderBy: { changedAt: 'asc' },
       include: {
         status: true,
-        updatedBy: { select: { id: true, fullName: true } },
+        updatedBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
       },
     });
   }

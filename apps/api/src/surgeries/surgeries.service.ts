@@ -1,3 +1,4 @@
+
 import {
   ConflictException,
   Injectable,
@@ -31,7 +32,7 @@ export class SurgeriesService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  // Tạo ca ở trạng thái đầu tiên và ghi bản lịch sử đầu tiên trong cùng giao dịch
+  // Tạo ca ở trạng thái đầu tiên và ghi bản lịch sử đầu tiên trong cùng giao dịch.
   async create(
     dto: CreateSurgeryDto,
     user: AuthUser,
@@ -39,7 +40,11 @@ export class SurgeriesService {
     const patient = await this.prisma.patient.findUnique({
       where: { id: dto.patientId },
     });
-    if (!patient) throw new NotFoundException('Không tìm thấy bệnh nhân');
+
+    if (!patient) {
+      throw new NotFoundException('Không tìm thấy bệnh nhân');
+    }
+
     const first = await this.statuses.first();
 
     const surgery = await this.prisma.$transaction(async (tx) => {
@@ -54,6 +59,7 @@ export class SurgeriesService {
         },
         include: SURGERY_INCLUDE,
       });
+
       await tx.statusHistory.create({
         data: {
           surgeryId: created.id,
@@ -62,6 +68,7 @@ export class SurgeriesService {
           note: 'Tạo ca',
         },
       });
+
       return created;
     });
 
@@ -71,6 +78,7 @@ export class SurgeriesService {
       entityType: 'surgery',
       entityId: surgery.id,
     });
+
     return surgery;
   }
 
@@ -78,8 +86,11 @@ export class SurgeriesService {
     const where: Prisma.SurgeryWhereInput = {
       ...(query.date ? { scheduledAt: dayRange(query.date) } : {}),
       ...(query.roomId ? { roomId: query.roomId } : {}),
-      ...(query.status ? { currentStatus: { code: query.status } } : {}),
+      ...(query.status
+        ? { currentStatus: { code: query.status } }
+        : {}),
     };
+
     return this.prisma.surgery.findMany({
       where,
       include: SURGERY_INCLUDE,
@@ -92,7 +103,11 @@ export class SurgeriesService {
       where: { id },
       include: SURGERY_INCLUDE,
     });
-    if (!surgery) throw new NotFoundException('Không tìm thấy ca phẫu thuật');
+
+    if (!surgery) {
+      throw new NotFoundException('Không tìm thấy ca phẫu thuật');
+    }
+
     return surgery;
   }
 
@@ -102,30 +117,54 @@ export class SurgeriesService {
     user: AuthUser,
   ): Promise<SurgeryWithRelations> {
     const current = await this.findOne(id);
+
     if (current.cancelledAt) {
       throw new ConflictException('Ca đã bị hủy, không thể sửa');
     }
+
+    // Không cho chỉnh sửa ca đã hoàn tất.
+    if (await this.statuses.isFinal(current.currentStatus)) {
+      throw new ConflictException(
+        'Ca đã hoàn tất, không thể chỉnh sửa',
+      );
+    }
+
     const surgery = await this.prisma.surgery.update({
       where: { id },
       data: {
         title: dto.title?.trim(),
         roomId: dto.roomId,
-        scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : undefined,
+        scheduledAt: dto.scheduledAt
+          ? new Date(dto.scheduledAt)
+          : undefined,
+
+        // undefined: giữ nguyên.
+        // null: sử dụng thời gian mặc định của Admin.
+        // Số nguyên dương: thời gian riêng của ca (phút).
+        expectedMinutes: dto.expectedMinutes,
       },
       include: SURGERY_INCLUDE,
     });
+
     await this.audit.log({
       userId: user.id,
       action: 'UPDATE',
       entityType: 'surgery',
       entityId: id,
     });
+
     const isScheduleChanged =
-      surgery.scheduledAt.getTime() !== current.scheduledAt.getTime() ||
+      surgery.scheduledAt.getTime() !==
+        current.scheduledAt.getTime() ||
       surgery.roomId !== current.roomId;
+
     if (isScheduleChanged) {
-      await this.notifications.notifySurgery(id, SCHEDULE_CHANGED_MESSAGE);
+      await this.notifications.notifySurgery(
+        id,
+        SCHEDULE_CHANGED_MESSAGE,
+      );
     }
+
     return surgery;
   }
 
@@ -135,22 +174,38 @@ export class SurgeriesService {
     user: AuthUser,
   ): Promise<SurgeryWithRelations> {
     const current = await this.findOne(id);
-    if (current.cancelledAt) throw new ConflictException('Ca đã bị hủy');
-    if (await this.statuses.isFinal(current.currentStatus)) {
-      throw new ConflictException('Ca đã hoàn tất, không thể hủy');
+
+    if (current.cancelledAt) {
+      throw new ConflictException('Ca đã bị hủy');
     }
+
+    if (await this.statuses.isFinal(current.currentStatus)) {
+      throw new ConflictException(
+        'Ca đã hoàn tất, không thể hủy',
+      );
+    }
+
     const surgery = await this.prisma.surgery.update({
       where: { id },
-      data: { cancelledAt: new Date(), cancelReason: reason.trim() },
+      data: {
+        cancelledAt: new Date(),
+        cancelReason: reason.trim(),
+      },
       include: SURGERY_INCLUDE,
     });
+
     await this.audit.log({
       userId: user.id,
       action: 'CANCEL',
       entityType: 'surgery',
       entityId: id,
     });
-    await this.notifications.notifySurgery(id, CHANGED_MESSAGE);
+
+    await this.notifications.notifySurgery(
+      id,
+      CHANGED_MESSAGE,
+    );
+
     return surgery;
   }
 }
