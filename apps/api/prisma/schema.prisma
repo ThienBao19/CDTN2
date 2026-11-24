@@ -1,3 +1,4 @@
+
 // Mô hình dữ liệu — mục 10 tài liệu dự án (11 bảng).
 // status_history và audit_logs chỉ thêm mới, không sửa/xóa (BR-04, mục 10.2).
 
@@ -176,6 +177,9 @@ model StatusHistory {
   status    StatusDefinition @relation(fields: [statusId], references: [id])
   updatedBy User             @relation(fields: [updatedById], references: [id])
 
+  // Thông báo quá giờ thuộc lần vào giai đoạn này.
+  overdueNotifications Notification[] @relation("OverdueStageHistory")
+
   @@index([surgeryId, changedAt])
   @@map("status_history")
 }
@@ -214,9 +218,20 @@ model Notification {
   lastError String?             @map("last_error")
   readAt    DateTime?           @map("read_at")
 
+  // Chỉ sử dụng cho thông báo quá giờ.
+  // null = thông báo thông thường.
+  // ID lịch sử giúp phân biệt từng lần vào một giai đoạn.
+  overdueStageHistoryId String? @map("overdue_stage_history_id")
+
   user    User    @relation(fields: [userId], references: [id])
   surgery Surgery @relation(fields: [surgeryId], references: [id])
 
+  overdueStageHistory StatusHistory? @relation("OverdueStageHistory", fields: [overdueStageHistoryId], references: [id], onDelete: Restrict)
+
+  // Mỗi người nhà chỉ nhận một thông báo quá giờ
+  // trong mỗi lần vào một giai đoạn.
+  @@unique([userId, overdueStageHistoryId])
+  @@index([overdueStageHistoryId])
   @@index([userId, createdAt])
   @@map("notifications")
 }

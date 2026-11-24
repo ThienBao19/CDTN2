@@ -1,3 +1,4 @@
+
 import {
   Body,
   Controller,
@@ -67,7 +68,7 @@ export class SurgeriesController {
     return this.surgeries.cancel(id, dto.reason, user);
   }
 
-  // Ma trận quyền: chỉ nhân viên y tế được cập nhật trạng thái ca
+  // Ma trận quyền: chỉ nhân viên y tế được cập nhật trạng thái ca.
   @Post(':id/status')
   @Roles(Role.STAFF)
   changeStatus(
@@ -78,6 +79,16 @@ export class SurgeriesController {
     return this.status.change(id, dto, user);
   }
 
+  // Chỉ nhân viên y tế được chủ động gửi thông báo quá giờ.
+  @Post(':id/overdue-notification')
+  @Roles(Role.STAFF)
+  sendOverdueNotification(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.surgeries.sendOverdueNotification(id, user);
+  }
+
   @Get(':id/history')
   async history(
     @Param('id', ParseUUIDPipe) id: string,
@@ -85,12 +96,17 @@ export class SurgeriesController {
   ) {
     await this.access.assertCanView(user, id);
     const entries = await this.status.history(id);
+
     if (user.role !== Role.FAMILY) return entries;
-    // Người nhà chỉ thấy tên trạng thái và thời điểm (NFR-07)
+
+    // Người nhà chỉ thấy tên trạng thái và thời điểm (NFR-07).
     return entries.map((e) => ({
       id: e.id,
       changedAt: e.changedAt,
-      status: { code: e.status.code, label: e.status.label },
+      status: {
+        code: e.status.code,
+        label: e.status.label,
+      },
     }));
   }
 }
