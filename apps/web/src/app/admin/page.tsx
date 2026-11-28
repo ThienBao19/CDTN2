@@ -20,6 +20,12 @@ const sections = [
     icon: "🏥",
   },
   {
+    title: "Thống kê",
+    description: "Số ca theo ngày, phòng, trạng thái; thời gian từng giai đoạn; tỉ lệ gửi push.",
+    href: "/admin/thong-ke",
+    icon: "📊",
+  },
+  {
     title: "Nhật ký truy cập",
     description: "Theo dõi các hoạt động và lịch sử truy cập hệ thống.",
     href: "/admin/nhat-ky",
